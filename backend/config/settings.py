@@ -37,12 +37,16 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
+    'cloudinary_storage',
+    'django.contrib.staticfiles',
+    'cloudinary',
 
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-
+    
+    'cloudinary_storage',
+    'cloudinary',
     "core.apps.CoreConfig",
 ]
 
@@ -176,3 +180,10 @@ CORS_ALLOWED_ORIGINS = [
 
 # Optionnel mais recommandé pour les tests de développement :
 CORS_ALLOW_ALL_ORIGINS = True
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'gymzkxvk',
+    'API_KEY': '611156214146227',
+    'API_SECRET': '7hWDIirW7Oh_zKeiVJsH59bY6fI'
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
