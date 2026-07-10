@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-    
+
     "core.apps.CoreConfig",
 ]
 
@@ -98,12 +98,11 @@ WSGI_APPLICATION = "config.wsgi.application"
 # }
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600
+    )
 }
-
 AUTH_USER_MODEL = "core.User"
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -185,3 +184,4 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': '7hWDIirW7Oh_zKeiVJsH59bY6fI'
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+MEDIA_URL = '/media/'

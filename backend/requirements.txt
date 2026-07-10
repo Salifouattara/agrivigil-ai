@@ -111,3 +111,5 @@ yarl==1.23.0
 zopfli==0.4.1
 cloudinary==1.45.0
 django-cloudinary-storage==0.3.0
+dj-database-url==2.0.0
+psycopg2-binary==2.9.7
