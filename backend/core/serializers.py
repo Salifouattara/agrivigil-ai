@@ -6,14 +6,14 @@ from rest_framework import serializers
 from .models import CropScan, CropScanTracking, Expert, ExpertMessage, FertilizerCalculation, HealthAlert, User
 
 
-    class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
         class Meta:
             model = User
             fields = ["id", "email", "full_name", "role", "phone_number", "preferred_language", "created_date"]
             read_only_fields = ["id", "role", "created_date"]
 
 
-    class RegisterSerializer(serializers.Serializer):
+class RegisterSerializer(serializers.Serializer):
         email = serializers.EmailField()
         password = serializers.CharField(write_only=True)
         full_name = serializers.CharField(required=False, allow_blank=True, default="")
@@ -28,21 +28,21 @@ from .models import CropScan, CropScanTracking, Expert, ExpertMessage, Fertilize
             return value
 
 
-    class VerifyOtpSerializer(serializers.Serializer):
+class VerifyOtpSerializer(serializers.Serializer):
         email = serializers.EmailField()
         otp_code = serializers.CharField(max_length=6, min_length=6)
 
 
-    class LoginSerializer(serializers.Serializer):
+class LoginSerializer(serializers.Serializer):
         email = serializers.EmailField()
         password = serializers.CharField(write_only=True)
 
 
-    class ForgotPasswordSerializer(serializers.Serializer):
+class ForgotPasswordSerializer(serializers.Serializer):
         email = serializers.EmailField()
 
 
-    class ResetPasswordSerializer(serializers.Serializer):
+class ResetPasswordSerializer(serializers.Serializer):
         email = serializers.EmailField()
         reset_token = serializers.CharField()
         new_password = serializers.CharField(write_only=True)
@@ -52,14 +52,14 @@ from .models import CropScan, CropScanTracking, Expert, ExpertMessage, Fertilize
             return value
 
 
-    class CropScanTrackingSerializer(serializers.ModelSerializer):
+class CropScanTrackingSerializer(serializers.ModelSerializer):
         class Meta:
             model = CropScanTracking
             fields = ["id", "name", "status", "created_date", "updated_date"]
             read_only_fields = ["id", "created_date", "updated_date"]
 
 
-    class CropScanSerializer(serializers.ModelSerializer):
+class CropScanSerializer(serializers.ModelSerializer):
         image_url = serializers.SerializerMethodField()
         tracking_id = serializers.PrimaryKeyRelatedField(
             queryset=CropScanTracking.objects.all(),
@@ -68,7 +68,7 @@ from .models import CropScan, CropScanTracking, Expert, ExpertMessage, Fertilize
             allow_null=True
         )
 
-    class Meta:
+class Meta:
         model = CropScan
         fields = [
             "id", "image", "image_url", "crop_name", "disease_name", "severity",
@@ -78,7 +78,7 @@ from .models import CropScan, CropScanTracking, Expert, ExpertMessage, Fertilize
         read_only_fields = ["id", "created_date"]
         extra_kwargs = {"image": {"write_only": True, "required": False}}
 
-    def get_image_url(self, obj):
+def get_image_url(self, obj):
         # On renvoie DIRECTEMENT l'URL sans lui coller le domaine de Render devant
         if obj.image:
             return obj.image.url
