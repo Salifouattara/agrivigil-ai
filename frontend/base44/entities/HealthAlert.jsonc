@@ -1,0 +1,48 @@
+{
+  "name": "HealthAlert",
+  "type": "object",
+  "properties": {
+    "disease_name": {
+      "type": "string",
+      "description": "Disease detected"
+    },
+    "crop_name": {
+      "type": "string",
+      "description": "Affected crop"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "faible",
+        "mod\u00e9r\u00e9e",
+        "\u00e9lev\u00e9e",
+        "critique"
+      ],
+      "default": "mod\u00e9r\u00e9e"
+    },
+    "distance_km": {
+      "type": "number",
+      "description": "Simulated distance in km from the user (0 for own alerts)"
+    },
+    "location_label": {
+      "type": "string",
+      "description": "Locality label (e.g. Bouak\u00e9, Your parcelle)"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Scan image URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "trait\u00e9e"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "disease_name",
+    "crop_name"
+  ]
+}

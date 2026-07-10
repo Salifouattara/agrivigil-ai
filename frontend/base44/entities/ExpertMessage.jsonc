@@ -1,0 +1,36 @@
+{
+  "name": "ExpertMessage",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "Conversation thread ID"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "sender_role": {
+      "type": "string",
+      "enum": [
+        "farmer",
+        "expert"
+      ],
+      "default": "farmer"
+    },
+    "content": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "scan_id": {
+      "type": "string",
+      "description": "Reference to a CropScan if attached"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "content",
+    "sender_name"
+  ]
+}

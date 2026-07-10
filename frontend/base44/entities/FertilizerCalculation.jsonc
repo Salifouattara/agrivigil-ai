@@ -1,0 +1,54 @@
+{
+  "name": "FertilizerCalculation",
+  "type": "object",
+  "properties": {
+    "crop_type": {
+      "type": "string",
+      "enum": [
+        "cacao",
+        "caf\u00e9",
+        "manioc",
+        "riz",
+        "ma\u00efs",
+        "igname",
+        "banane_plantain",
+        "h\u00e9v\u00e9a",
+        "palmier_huile",
+        "coton"
+      ],
+      "description": "Type of crop"
+    },
+    "soil_type": {
+      "type": "string",
+      "enum": [
+        "argileux",
+        "sableux",
+        "limoneux",
+        "lat\u00e9ritique",
+        "tourbeux"
+      ],
+      "description": "Type of soil"
+    },
+    "surface_hectares": {
+      "type": "number",
+      "description": "Surface area in hectares"
+    },
+    "nitrogen_kg": {
+      "type": "number"
+    },
+    "phosphorus_kg": {
+      "type": "number"
+    },
+    "potassium_kg": {
+      "type": "number"
+    },
+    "recommendation": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "crop_type",
+    "soil_type",
+    "surface_hectares"
+  ]
+}

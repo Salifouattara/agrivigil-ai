@@ -1,0 +1,66 @@
+{
+  "name": "CropScan",
+  "type": "object",
+  "properties": {
+    "image_url": {
+      "type": "string",
+      "description": "URL of the scanned crop image"
+    },
+    "crop_name": {
+      "type": "string",
+      "description": "Name of the crop scanned"
+    },
+    "disease_name": {
+      "type": "string",
+      "description": "Detected disease name"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "faible",
+        "mod\u00e9r\u00e9e",
+        "\u00e9lev\u00e9e",
+        "critique"
+      ],
+      "description": "Severity level of the disease"
+    },
+    "remedy": {
+      "type": "string",
+      "description": "Recommended remedy"
+    },
+    "dosage": {
+      "type": "string",
+      "description": "Dosage instructions"
+    },
+    "confidence": {
+      "type": "number",
+      "description": "AI confidence score 0-100"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    },
+    "location_lat": {
+      "type": "number",
+      "description": "Latitude of scan location"
+    },
+    "location_lng": {
+      "type": "number",
+      "description": "Longitude of scan location"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "treated",
+        "resolved"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "image_url",
+    "crop_name",
+    "disease_name"
+  ]
+}
