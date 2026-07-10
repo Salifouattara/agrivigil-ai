@@ -6,67 +6,67 @@ from rest_framework import serializers
 from .models import CropScan, CropScanTracking, Expert, ExpertMessage, FertilizerCalculation, HealthAlert, User
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "email", "full_name", "role", "phone_number", "preferred_language", "created_date"]
-        read_only_fields = ["id", "role", "created_date"]
+    class UserSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = User
+            fields = ["id", "email", "full_name", "role", "phone_number", "preferred_language", "created_date"]
+            read_only_fields = ["id", "role", "created_date"]
 
 
-class RegisterSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-    full_name = serializers.CharField(required=False, allow_blank=True, default="")
+    class RegisterSerializer(serializers.Serializer):
+        email = serializers.EmailField()
+        password = serializers.CharField(write_only=True)
+        full_name = serializers.CharField(required=False, allow_blank=True, default="")
 
-    def validate_email(self, value):
-        if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("Un compte existe déjà avec cet email.")
-        return value
+        def validate_email(self, value):
+            if User.objects.filter(email__iexact=value).exists():
+                raise serializers.ValidationError("Un compte existe déjà avec cet email.")
+            return value
 
-    def validate_password(self, value):
-        password_validation.validate_password(value)
-        return value
-
-
-class VerifyOtpSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    otp_code = serializers.CharField(max_length=6, min_length=6)
+        def validate_password(self, value):
+            password_validation.validate_password(value)
+            return value
 
 
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+    class VerifyOtpSerializer(serializers.Serializer):
+        email = serializers.EmailField()
+        otp_code = serializers.CharField(max_length=6, min_length=6)
 
 
-class ForgotPasswordSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    class LoginSerializer(serializers.Serializer):
+        email = serializers.EmailField()
+        password = serializers.CharField(write_only=True)
 
 
-class ResetPasswordSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    reset_token = serializers.CharField()
-    new_password = serializers.CharField(write_only=True)
-
-    def validate_new_password(self, value):
-        password_validation.validate_password(value)
-        return value
+    class ForgotPasswordSerializer(serializers.Serializer):
+        email = serializers.EmailField()
 
 
-class CropScanTrackingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CropScanTracking
-        fields = ["id", "name", "status", "created_date", "updated_date"]
-        read_only_fields = ["id", "created_date", "updated_date"]
+    class ResetPasswordSerializer(serializers.Serializer):
+        email = serializers.EmailField()
+        reset_token = serializers.CharField()
+        new_password = serializers.CharField(write_only=True)
+
+        def validate_new_password(self, value):
+            password_validation.validate_password(value)
+            return value
 
 
-class CropScanSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-    tracking_id = serializers.PrimaryKeyRelatedField(
-        queryset=CropScanTracking.objects.all(),
-        source="tracking",
-        required=False,
-        allow_null=True
-    )
+    class CropScanTrackingSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = CropScanTracking
+            fields = ["id", "name", "status", "created_date", "updated_date"]
+            read_only_fields = ["id", "created_date", "updated_date"]
+
+
+    class CropScanSerializer(serializers.ModelSerializer):
+        image_url = serializers.SerializerMethodField()
+        tracking_id = serializers.PrimaryKeyRelatedField(
+            queryset=CropScanTracking.objects.all(),
+            source="tracking",
+            required=False,
+            allow_null=True
+        )
 
     class Meta:
         model = CropScan
@@ -79,10 +79,10 @@ class CropScanSerializer(serializers.ModelSerializer):
         extra_kwargs = {"image": {"write_only": True, "required": False}}
 
     def get_image_url(self, obj):
-        request = self.context.get("request")
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        return obj.image.url if obj.image else None
+        # On renvoie DIRECTEMENT l'URL sans lui coller le domaine de Render devant
+        if obj.image:
+            return obj.image.url
+        return None
 
 
 class HealthAlertSerializer(serializers.ModelSerializer):
@@ -104,10 +104,10 @@ class HealthAlertSerializer(serializers.ModelSerializer):
         extra_kwargs = {"image": {"write_only": True, "required": False}}
 
     def get_image_url(self, obj):
-        request = self.context.get("request")
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        return obj.image.url if obj.image else None
+        # On renvoie DIRECTEMENT l'URL sans lui coller le domaine de Render devant
+        if obj.image:
+            return obj.image.url
+        return None
 
     def get_distance_km(self, obj):
         # Calculé côté vue (haversine) et injecté dans le contexte ; 0 par défaut
