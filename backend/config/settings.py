@@ -1,7 +1,7 @@
 """
 Django settings for AgriVigil AI — config du backend MVP.
 """
-
+import dj_database_url
 import copy
 import os
 from datetime import timedelta
@@ -100,7 +100,8 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600
+        conn_max_age=600,
+        ssl_require=True # Important pour Railway
     )
 }
 AUTH_USER_MODEL = "core.User"
