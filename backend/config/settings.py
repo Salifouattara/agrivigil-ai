@@ -31,6 +31,8 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 
 INSTALLED_APPS = [
+    'corsheaders',
+    'django.contrib.admin',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -47,6 +49,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -170,3 +174,9 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY", "")
 AFRICAS_TALKING_API_KEY = os.environ.get("AFRICAS_TALKING_API_KEY", "")
 AFRICAS_TALKING_USERNAME = os.environ.get("AFRICAS_TALKING_USERNAME", "")
+CORS_ALLOWED_ORIGINS = [
+    "https://agrivigil-ai.vercel.app",
+]
+
+# Optionnel mais recommandé pour les tests de développement :
+CORS_ALLOW_ALL_ORIGINS = True
