@@ -65,7 +65,8 @@ export default function HubExperts() {
 
   const getContactBody = (expert) => {
     if (!expert) return '';
-    const subject = expert.role === 'Vétérinaire'
+    const role = normalizeRole(expert.role);
+    const subject = role.includes('veterinaire')
       ? 'je souhaite prendre rendez-vous pour une consultation vétérinaire.'
       : 'je souhaite un conseil agronomique pour ma culture.';
     return encodeURIComponent(`Bonjour ${expert.name}, ${subject}`);
