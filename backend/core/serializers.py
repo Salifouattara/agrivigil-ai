@@ -6,6 +6,46 @@ from rest_framework import serializers
 from .models import CropScan, CropScanTracking, Expert, ExpertMessage, FertilizerCalculation, HealthAlert, User
 
 
+MOJIBAKE_REPLACEMENTS = {
+    "Ã¯Â¿Â½": "é",
+    "Ã©": "é",
+    "Ã¨": "è",
+    "Ãª": "ê",
+    "Ã«": "ë",
+    "Ã§": "ç",
+    "Ã¸": "ø",
+    "Ã¶": "ö",
+    "Ã´": "ô",
+    "Ã¼": "ü",
+    "Ã¹": "ù",
+    "Ã»": "û",
+    "Ã¢": "â",
+    "Ã®": "î",
+    "Ã¯": "ï",
+    "Ã‰": "É",
+    "Ãˆ": "È",
+    "ÃŠ": "Ê",
+    "Ã‹": "Ë",
+    "Ã‡": "Ç",
+    "Ã–": "Ö",
+    "Ãœ": "Ü",
+    "Ã€": "À",
+    "Ã‚": "Â",
+    "Ã„": "Ä",
+    "Ã…": "Å",
+    "Ãƒ": "Ã",
+}
+
+
+def normalize_text(value):
+    if not isinstance(value, str):
+        return value
+    normalized = value
+    for bad, good in MOJIBAKE_REPLACEMENTS.items():
+        normalized = normalized.replace(bad, good)
+    return normalized
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -149,6 +189,14 @@ class ExpertSerializer(serializers.ModelSerializer):
             "phone_number", "whatsapp_number", "phone_link", "sms_link", "whatsapp_link",
             "photo_url", "avatar_color", "online",
         ]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        for field_name in ("name", "role", "specialty", "location", "phone_number", "whatsapp_number"):
+            value = representation.get(field_name)
+            if isinstance(value, str):
+                representation[field_name] = normalize_text(value)
+        return representation
 
     def get_phone_link(self, obj):
         return f"tel:{obj.phone_number}" if obj.phone_number else None

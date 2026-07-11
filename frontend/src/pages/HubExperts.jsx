@@ -34,6 +34,8 @@ const WhatsAppIcon = (props) => (
   </svg>
 );
 
+const normalizeRole = (value = '') => `${value || ''}`.normalize('NFKD').replace(/[^\w\sÀ-ÿ]/g, '').trim().toLowerCase();
+
 export default function HubExperts() {
   const [experts, setExperts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,8 +54,14 @@ export default function HubExperts() {
     return <ExpertChat expert={chatbotAgent} onBack={() => setChatbotOpen(false)} />;
   }
 
-  const plantDocs = experts.filter(e => e.role === 'Médecin de plantes');
-  const vets = experts.filter(e => e.role === 'Vétérinaire');
+  const plantDocs = experts.filter((e) => {
+    const role = normalizeRole(e.role);
+    return role.includes('medecin') || role.includes('plante') || role.includes('phytopathologie');
+  });
+  const vets = experts.filter((e) => {
+    const role = normalizeRole(e.role);
+    return role.includes('veterinaire') || role.includes('veterinaires');
+  });
 
   const getContactBody = (expert) => {
     if (!expert) return '';
