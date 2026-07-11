@@ -1,4 +1,6 @@
 import re
+import urllib.parse
+import unicodedata
 
 from django.contrib.auth import password_validation
 from rest_framework import serializers
@@ -40,10 +42,34 @@ MOJIBAKE_REPLACEMENTS = {
 def normalize_text(value):
     if not isinstance(value, str):
         return value
+
     normalized = value
     for bad, good in MOJIBAKE_REPLACEMENTS.items():
         normalized = normalized.replace(bad, good)
+
+    normalized = normalized.replace("%EF%BF%BD", "")
+    normalized = normalized.replace("�", "")
+    normalized = unicodedata.normalize("NFKD", normalized)
+    normalized = "".join(char for char in normalized if not unicodedata.combining(char))
+    normalized = normalized.encode("ascii", "ignore").decode("ascii")
+    normalized = re.sub(r"[^A-Za-z0-9\s_-]", " ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
     return normalized
+
+
+def clean_photo_url(value):
+    if not isinstance(value, str) or not value:
+        return value
+
+    cleaned = value.replace("%EF%BF%BD", "")
+    parsed = urllib.parse.urlsplit(cleaned)
+    if not parsed.scheme or not parsed.netloc:
+        return cleaned
+
+    path = urllib.parse.unquote(parsed.path)
+    path = path.replace("�", "")
+    path = re.sub(r"[^A-Za-z0-9/._-]", "", path)
+    return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, path, parsed.query, parsed.fragment))
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -192,7 +218,7 @@ class ExpertSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        for field_name in ("name", "role", "specialty", "location", "phone_number", "whatsapp_number"):
+        for field_name in ("name", "role", "specialty", "location"):
             value = representation.get(field_name)
             if isinstance(value, str):
                 representation[field_name] = normalize_text(value)
@@ -213,9 +239,13 @@ class ExpertSerializer(serializers.ModelSerializer):
 
     def get_photo_url(self, obj):
         request = self.context.get("request")
+        photo_url = None
         if obj.photo and request:
-            return request.build_absolute_uri(obj.photo.url)
-        return obj.photo.url if obj.photo else None
+            photo_url = request.build_absolute_uri(obj.photo.url)
+        elif obj.photo:
+            photo_url = obj.photo.url
+
+        return clean_photo_url(photo_url) if photo_url else None
 
 
 class ExpertMessageSerializer(serializers.ModelSerializer):
