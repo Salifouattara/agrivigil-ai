@@ -2,6 +2,7 @@ import re
 import urllib.parse
 import unicodedata
 
+from django.conf import settings
 from django.contrib.auth import password_validation
 from rest_framework import serializers
 
@@ -64,19 +65,28 @@ def clean_photo_url(value):
     cleaned = value.strip().replace("%EF%BF%BD", "").replace("�", "")
     cleaned = re.sub(r"https?:/res\.cloudinary\.com/", "https://res.cloudinary.com/", cleaned)
 
-    if "res.cloudinary.com/" in cleaned:
-        parts = re.split(r"https?://res\.cloudinary\.com/", cleaned)
-        if len(parts) > 1:
-            suffix = parts[-1].lstrip("/")
-            cleaned = f"https://res.cloudinary.com/{suffix}"
+    if cleaned.startswith(("http://", "https://")):
+        if "res.cloudinary.com/" in cleaned:
+            parts = re.split(r"https?://res\.cloudinary\.com/", cleaned)
+            if len(parts) > 1:
+                suffix = parts[-1].lstrip("/")
+                cleaned = f"https://res.cloudinary.com/{suffix}"
 
-    parsed = urllib.parse.urlsplit(cleaned)
-    if not parsed.scheme or not parsed.netloc:
+        parsed = urllib.parse.urlsplit(cleaned)
+        if parsed.scheme and parsed.netloc:
+            path = urllib.parse.unquote(parsed.path)
+            path = re.sub(r"[^A-Za-z0-9/._-]", "", path)
+            return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, path, parsed.query, parsed.fragment))
         return cleaned
 
-    path = urllib.parse.unquote(parsed.path)
-    path = re.sub(r"[^A-Za-z0-9/._-]", "", path)
-    return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, path, parsed.query, parsed.fragment))
+    media_base = getattr(settings, "MEDIA_URL", "")
+    if not media_base:
+        return cleaned
+
+    normalized_path = cleaned.lstrip("/")
+    if media_base.startswith(("http://", "https://")):
+        return urllib.parse.urljoin(media_base.rstrip("/") + "/", normalized_path)
+    return f"{media_base.rstrip('/')}/{normalized_path}"
 
 
 class UserSerializer(serializers.ModelSerializer):
