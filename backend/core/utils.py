@@ -1,9 +1,129 @@
-"""Utilitaires : calcul NPK (identique à src/lib/theme.js du frontend) et géolocalisation."""
+"""Utilitaires : calcul NPK, géolocalisation et synthèse vocale."""
 
 import math
+import os
+import threading
+import uuid
 import urllib.parse
+import wave
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+from typing import Optional
+
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+
+try:
+    import torch
+    from transformers import VitsModel, VitsTokenizer
+except ImportError:  # pragma: no cover - dépendances optionnelles selon l’environnement
+    torch = None
+    VitsModel = None
+    VitsTokenizer = None
 
 VALID_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".bmp", ".svg", ".tiff", ".tif")
+
+
+class TTSServiceError(Exception):
+    """Erreur levée lorsqu’un service de synthèse vocale ne peut pas générer l’audio."""
+
+
+_MODEL_CACHE: dict[tuple[str, str], tuple[object, object]] = {}
+_MODEL_LOCK = threading.Lock()
+
+
+def _load_tts_pipeline(model_name: str, token: Optional[str] = None) -> tuple[object, object]:
+    """Charge un modèle TTS localement une seule fois par modèle et token."""
+    if VitsModel is None or VitsTokenizer is None or torch is None:
+        raise TTSServiceError("Les dépendances transformers/torch ne sont pas installées.")
+
+    cache_key = (model_name, token or "")
+    cached = _MODEL_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    with _MODEL_LOCK:
+        cached = _MODEL_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
+
+        model = VitsModel.from_pretrained(model_name, use_auth_token=token or None)
+        tokenizer = VitsTokenizer.from_pretrained(model_name, use_auth_token=token or None)
+        model.eval()
+        _MODEL_CACHE[cache_key] = (model, tokenizer)
+        return _MODEL_CACHE[cache_key]
+
+
+def _write_wav_file(audio_array, output_path: Path) -> Path:
+    """Écrit un tenseur audio au format WAV sur disque."""
+    audio_tensor = audio_array.detach().cpu().float().numpy()
+    if audio_tensor.ndim > 1:
+        audio_tensor = audio_tensor[0]
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with wave.open(str(output_path), "wb") as wav_file:
+        wav_file.setnchannels(1)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(getattr(audio_array, "sampling_rate", 22050) or 22050)
+        pcm = (audio_tensor * 32767).astype("int16").tobytes()
+        wav_file.writeframes(pcm)
+    return output_path
+
+
+def synthesize_text(
+    text: str,
+    token: Optional[str] = None,
+    model_name: Optional[str] = None,
+    save_to_storage: bool = True,
+    use_async: bool = False,
+) -> dict:
+    """Génère un fichier audio localement via un modèle VITS Hugging Face."""
+    if not text or not isinstance(text, str) or not text.strip():
+        raise TTSServiceError("Le texte à synthétiser est vide.")
+
+    cleaned_text = text.strip()
+    resolved_token = token or getattr(settings, "HUGGINGFACE_API_TOKEN", "") or os.environ.get("HUGGINGFACE_API_TOKEN", "")
+    resolved_model = model_name or getattr(settings, "HUGGINGFACE_TTS_MODEL", "") or os.environ.get("HUGGINGFACE_TTS_MODEL", "facebook/mms-tts-bam")
+
+    def _generate() -> dict:
+        model, tokenizer = _load_tts_pipeline(resolved_model, resolved_token)
+        with torch.no_grad():
+            inputs = tokenizer(cleaned_text, return_tensors="pt")
+            outputs = model(**inputs)
+            audio_array = outputs.waveform[0]
+
+        extension = ".wav"
+        file_name = f"tts/{uuid.uuid4().hex}{extension}"
+        target_path = Path(settings.MEDIA_ROOT) / file_name
+        _write_wav_file(audio_array, target_path)
+
+        if not target_path.exists():
+            if save_to_storage:
+                audio_bytes = b""
+                saved_path = default_storage.save(file_name, ContentFile(audio_bytes))
+                audio_url = default_storage.url(saved_path)
+                return {"audio_bytes": audio_bytes, "audio_url": audio_url, "path": saved_path}
+            return {"audio_bytes": b"", "audio_url": str(target_path), "path": str(target_path)}
+
+        if save_to_storage:
+            with target_path.open("rb") as audio_file:
+                saved_path = default_storage.save(file_name, ContentFile(audio_file.read()))
+            audio_url = default_storage.url(saved_path)
+            target_path.unlink(missing_ok=True)
+            return {"audio_bytes": b"", "audio_url": audio_url, "path": saved_path}
+
+        return {"audio_bytes": target_path.read_bytes(), "audio_url": str(target_path), "path": str(target_path)}
+
+    if use_async:
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            return executor.submit(_generate).result()
+    return _generate()
+
+
+def synthesize_text_to_speech(*args, **kwargs) -> dict:
+    """Compatibilité avec l’API existante."""
+    return synthesize_text(*args, **kwargs)
 
 
 def ensure_image_extension(value: str, default_extension: str = "avif") -> str:

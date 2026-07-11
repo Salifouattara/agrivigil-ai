@@ -2,6 +2,7 @@ import logging
 import random
 from datetime import date, timedelta
 
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.db import transaction
 from django.utils import timezone
@@ -22,7 +23,7 @@ from .serializers import (
     LoginSerializer, RegisterSerializer, ResetPasswordSerializer, UserSerializer,
     VerifyOtpSerializer,
 )
-from .utils import calculate_fertilizer_detailed, haversine_km
+from .utils import TTSServiceError, calculate_fertilizer_detailed, haversine_km, synthesize_text_to_speech
 from .weather import IVORIAN_CITIES, get_weather
 
 logger = logging.getLogger(__name__)
@@ -196,6 +197,34 @@ class LogoutView(APIView):
             except Exception:
                 pass
         return Response({"detail": "Déconnecté."})
+
+
+# ---------------------------------------------------------------------------
+# Synthèse vocale
+# ---------------------------------------------------------------------------
+
+class SynthesizeDioulaView(APIView):
+    """Génère un audio TTS à partir d’un texte en français/dioula via Hugging Face."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        text = (request.data.get("text") or "").strip()
+        if not text:
+            return Response({"detail": "Le texte à synthétiser est requis."}, status=status.HTTP_400_BAD_REQUEST)
+
+        model_name = request.data.get("model_name") or getattr(settings, "HUGGINGFACE_TTS_MODEL", "")
+        token = request.data.get("token") or getattr(settings, "HUGGINGFACE_API_TOKEN", "")
+        try:
+            result = synthesize_text_to_speech(
+                text,
+                token=token,
+                model_name=model_name,
+                save_to_storage=True,
+            )
+        except TTSServiceError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({"audio_url": result["audio_url"], "path": result.get("path")}, status=status.HTTP_200_OK)
 
 
 # ---------------------------------------------------------------------------

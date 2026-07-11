@@ -48,11 +48,18 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
 ]
 
+try:
+    import whitenoise.middleware  # noqa: F401
+except ImportError:  # pragma: no cover - dépendance optionnelle selon l’environnement
+    WHITENOISE_MIDDLEWARE = []
+else:
+    WHITENOISE_MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware']
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     "django.middleware.security.SecurityMiddleware",
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    *WHITENOISE_MIDDLEWARE,
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -198,6 +205,8 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY", "")
 AFRICAS_TALKING_API_KEY = os.environ.get("AFRICAS_TALKING_API_KEY", "")
 AFRICAS_TALKING_USERNAME = os.environ.get("AFRICAS_TALKING_USERNAME", "")
+HUGGINGFACE_API_TOKEN = os.environ.get("HUGGINGFACE_API_TOKEN", "")
+HUGGINGFACE_TTS_MODEL = os.environ.get("HUGGINGFACE_TTS_MODEL", "microsoft/speecht5_tts")
 
 CLOUDINARY_STORAGE = {
     "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME", ""),

@@ -15,6 +15,9 @@ urlpatterns = [
     path("auth/forgot-password/", views.ForgotPasswordView.as_view(), name="forgot-password"),
     path("auth/reset-password/", views.ResetPasswordView.as_view(), name="reset-password"),
 
+    # Synthèse vocale
+    path("synthesize-dioula/", views.SynthesizeDioulaView.as_view(), name="synthesize-dioula"),
+
     # Scan IA
     path("scans/", views.CropScanListCreateView.as_view(), name="scan-list-create"),
     path("scans/<uuid:pk>/", views.CropScanDetailView.as_view(), name="scan-detail"),
