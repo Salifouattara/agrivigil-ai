@@ -61,16 +61,29 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_URL = '/static/'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_URL = "/static/"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 ROOT_URLCONF = "config.urls"
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://agrivigil-ai-production.up.railway.app',
-    'https://agrivigil-ai.vercel.app'
+    "https://agrivigil-ai-production.up.railway.app",
+    "https://agrivigil-ai.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
 ]
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 TEMPLATES = [
     {
@@ -169,12 +182,16 @@ SIMPLE_JWT = {
 # CORS — le frontend Vite tourne par défaut sur localhost:5173
 # ---------------------------------------------------------------------------
 
-CORS_ALLOWED_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173",
-    "https://agrivigil-ai.vercel.app",
-).split(",")
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://agrivigil-ai.vercel.app",
+    ).split(",")
+    if origin.strip()
+]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
 # ---------------------------------------------------------------------------
 # Clés d'intégration futures (Gemini, Africa's Talking...) — voir README.md
@@ -183,44 +200,29 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY", "")
 AFRICAS_TALKING_API_KEY = os.environ.get("AFRICAS_TALKING_API_KEY", "")
 AFRICAS_TALKING_USERNAME = os.environ.get("AFRICAS_TALKING_USERNAME", "")
-CORS_ALLOWED_ORIGINS = [
-    "https://agrivigil-ai.vercel.app",
-]
-
-# Optionnel mais recommandé pour les tests de développement :
-CORS_ALLOW_ALL_ORIGINS = True
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', 'gymzkxvk'), # Mets la valeur par défaut pour le local
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '611156214146227'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', '7hWDIirW70h_zKeiVJsH59bY6fI'),
+    "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME", ""),
+    "API_KEY": os.environ.get("CLOUDINARY_API_KEY", ""),
+    "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET", ""),
 }
-cloudinary_enabled = all([
-    CLOUDINARY_STORAGE['CLOUD_NAME'],
-    CLOUDINARY_STORAGE['API_KEY'],
-    CLOUDINARY_STORAGE['API_SECRET'],
+cloudinary_enabled = bool(os.environ.get("CLOUDINARY_URL", "")) or all([
+    CLOUDINARY_STORAGE["CLOUD_NAME"],
+    CLOUDINARY_STORAGE["API_KEY"],
+    CLOUDINARY_STORAGE["API_SECRET"],
 ])
 
 if cloudinary_enabled:
-    STORAGES = {
-        'default': {
-            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
-        },
-        'staticfiles': {
-            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
-        },
-    }
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = "https://res.cloudinary.com/{CLOUDINARY_STORAGE['CLOUD_NAME']}/"
-else:
-    STORAGES = {
-    "default": {
+    STORAGES["default"] = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "cloudinary_storage.storage.StaticHashedCloudinaryStorage",
-    },
-}
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    }
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    MEDIA_URL = f"https://res.cloudinary.com/{CLOUDINARY_STORAGE['CLOUD_NAME']}/"
+else:
+    STORAGES["default"] = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    }
+    DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+    MEDIA_URL = "/media/"
     MEDIA_URL = '/media/'
     

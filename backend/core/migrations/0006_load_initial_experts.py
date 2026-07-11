@@ -4,6 +4,16 @@ from pathlib import Path
 from django.db import migrations
 
 
+def _load_json_with_fallback(json_path):
+    for encoding in ("utf-8-sig", "utf-8", "cp1252", "latin-1"):
+        try:
+            with json_path.open("r", encoding=encoding) as fh:
+                return json.load(fh)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            continue
+    raise UnicodeDecodeError("utf-8", b"", 0, 1, "Unable to decode experts_data.json")
+
+
 def load_experts_from_json(apps, schema_editor):
     Expert = apps.get_model("core", "Expert")
     json_path = Path(__file__).resolve().parent.parent.parent / "experts_data.json"
@@ -11,8 +21,7 @@ def load_experts_from_json(apps, schema_editor):
     if not json_path.exists():
         return
 
-    with json_path.open(encoding="utf-8") as fh:
-        data = json.load(fh)
+    data = _load_json_with_fallback(json_path)
 
     for entry in data:
         if entry.get("model") != "core.expert":
