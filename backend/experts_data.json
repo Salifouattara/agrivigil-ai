@@ -3,13 +3,13 @@
     "model": "core.expert",
     "pk": "plant_issouf",
     "fields": {
-        "name": "Dr. Issouf Touré",
-        "role": "Médecin de plantes",
-        "specialty": "Phytopathologie, maladies du cacao et café",
+        "name": "Dr. Issouf Tourï¿½",
+        "role": "Mï¿½decin de plantes",
+        "specialty": "Phytopathologie, maladies du cacao et cafï¿½",
         "location": "Abidjan",
         "phone_number": "+225 02 83 41 23",
         "whatsapp_number": "+225 02 83 41 23",
-        "photo": "experts/photos/Capture_décran_2026-07-09_084039.png",
+        "photo": "experts/photos/Capture_dï¿½cran_2026-07-09_084039.png",
         "avatar_color": "#2D5A3D",
         "online": true
     }
@@ -18,13 +18,13 @@
     "model": "core.expert",
     "pk": "plant_mariam",
     "fields": {
-        "name": "Dr. Mariam Cissé",
-        "role": "Médecin de plantes",
-        "specialty": "Cultures vivrières, fertilisation et ravageurs",
+        "name": "Dr. Mariam Cissï¿½",
+        "role": "Mï¿½decin de plantes",
+        "specialty": "Cultures vivriï¿½res, fertilisation et ravageurs",
         "location": "Yamoussoukro",
         "phone_number": "+225 85 75 04 49",
         "whatsapp_number": "+225 85 75 04 49",
-        "photo": "experts/photos/Capture_décran_2026-07-09_084259.png",
+        "photo": "experts/photos/Capture_dï¿½cran_2026-07-09_084259.png",
         "avatar_color": "#3D7A52",
         "online": true
     }
@@ -33,13 +33,13 @@
     "model": "core.expert",
     "pk": "vet_awa",
     "fields": {
-        "name": "Dr. Awa Koné",
-        "role": "Vétérinaire",
-        "specialty": "Élevage bovin et ovin",
-        "location": "Bouaké",
+        "name": "Dr. Awa Konï¿½",
+        "role": "Vï¿½tï¿½rinaire",
+        "specialty": "ï¿½levage bovin et ovin",
+        "location": "Bouakï¿½",
         "phone_number": "+225 0501210840",
         "whatsapp_number": "+225 0501210840",
-        "photo": "experts/photos/Capture_décran_2026-07-09_084729.png",
+        "photo": "experts/photos/Capture_dï¿½cran_2026-07-09_084729.png",
         "avatar_color": "#C97B3D",
         "online": true
     }
@@ -49,12 +49,12 @@
     "pk": "vet_yao",
     "fields": {
         "name": "Dr. Yao Kouassi",
-        "role": "Vétérinaire",
+        "role": "Vï¿½tï¿½rinaire",
         "specialty": "Volailles et porcins",
         "location": "Korhogo",
         "phone_number": "+225 0501210840",
         "whatsapp_number": "+225 0501210840",
-        "photo": "experts/photos/Capture_décran_2026-07-09_084933.png",
+        "photo": "experts/photos/Capture_dï¿½cran_2026-07-09_084933.png",
         "avatar_color": "#B84A3E",
         "online": true
     }
