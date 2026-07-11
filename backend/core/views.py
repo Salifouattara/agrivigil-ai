@@ -10,7 +10,7 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from rest_framework.permissions import AllowAny
 from .ai_diagnosis import diagnose_crop_image
 from .crop_advice import get_crop_advice_enriched
 from .expert_engine import generate_chatbot_reply, generate_expert_reply
@@ -481,8 +481,8 @@ class CropAdviceView(APIView):
 class ExpertListView(generics.ListAPIView):
     queryset = Expert.objects.all()
     serializer_class = ExpertSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
+    # Remplace IsAuthenticated par AllowAny
+    permission_classes = [permissions.AllowAny]
 
 class ExpertMessageListCreateView(generics.ListCreateAPIView):
     serializer_class = ExpertMessageSerializer
