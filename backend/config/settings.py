@@ -182,14 +182,12 @@ SIMPLE_JWT = {
 # CORS — le frontend Vite tourne par défaut sur localhost:5173
 # ---------------------------------------------------------------------------
 
+# Force en dur pour tester
 CORS_ALLOWED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get(
-        "CORS_ALLOWED_ORIGINS",
-        "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://agrivigil-ai.vercel.app",
-    ).split(",")
-    if origin.strip()
+    "https://agrivigil-ai.vercel.app",
+    "http://localhost:5173",
 ]
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
 
