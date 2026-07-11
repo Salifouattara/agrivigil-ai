@@ -180,9 +180,8 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'gymzkxvk',
-    'API_KEY': '611156214146227',
-    'API_SECRET': '7hWDIirW7Oh_zKeiVJsH59bY6fI'
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-MEDIA_URL = '/media/'
