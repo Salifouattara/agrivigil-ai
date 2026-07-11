@@ -1,6 +1,39 @@
 """Utilitaires : calcul NPK (identique à src/lib/theme.js du frontend) et géolocalisation."""
 
 import math
+import urllib.parse
+
+VALID_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".bmp", ".svg", ".tiff", ".tif")
+
+
+def ensure_image_extension(value: str, default_extension: str = "avif") -> str:
+    """Ajoute une extension d’image si l’URL ou le chemin est tronqué."""
+    if not value or not isinstance(value, str):
+        return value
+
+    cleaned = value.strip()
+    if not cleaned:
+        return cleaned
+
+    parsed = urllib.parse.urlsplit(cleaned)
+    path = urllib.parse.unquote(parsed.path or "")
+
+    if any(path.lower().endswith(ext) for ext in VALID_IMAGE_EXTENSIONS):
+        return cleaned
+
+    if path.endswith("/"):
+        path = path.rstrip("/")
+
+    if "." in path.split("/")[-1]:
+        return cleaned
+
+    suffix = default_extension if not default_extension.startswith(".") else default_extension
+    path = f"{path}.{suffix}"
+
+    if parsed.scheme and parsed.netloc:
+        return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, path, parsed.query, parsed.fragment))
+
+    return path
 
 FERTILIZER_DATA = {
     "cacao": {"base": {"N": 60, "P": 30, "K": 80}, "soil": {

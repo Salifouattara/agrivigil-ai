@@ -143,6 +143,7 @@ class CropScanTrackingSerializer(serializers.ModelSerializer):
 
 
 class CropScanSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
     tracking_id = serializers.PrimaryKeyRelatedField(
         queryset=CropScanTracking.objects.all(),
@@ -159,14 +160,25 @@ class CropScanSerializer(serializers.ModelSerializer):
             "notes", "location_lat", "location_lng", "status", "created_date", "tracking_id"
         ]
         read_only_fields = ["id", "created_date"]
-        extra_kwargs = {"image": {"write_only": True, "required": False}}
 
-    def get_image_url(self, obj):
+    def get_image(self, obj):
         if not obj.image:
             return None
 
-        url = obj.image.url
-        return clean_photo_url(url)
+        image_value = getattr(obj.image, "name", None) or str(obj.image)
+        if not image_value:
+            return None
+
+        if isinstance(image_value, str) and image_value.startswith("http"):
+            return image_value
+
+        if hasattr(obj.image, "url") and isinstance(obj.image.url, str) and obj.image.url.startswith("http"):
+            return obj.image.url
+
+        return f"https://res.cloudinary.com/gymzkxvk/{image_value.lstrip('/')}"
+
+    def get_image_url(self, obj):
+        return self.get_image(obj)
 
 
 class HealthAlertSerializer(serializers.ModelSerializer):
