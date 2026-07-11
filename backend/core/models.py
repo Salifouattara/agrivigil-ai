@@ -143,7 +143,7 @@ class CropScan(TimeStampedModel):
     disease_name = models.CharField(max_length=150, blank=True)
     severity = models.CharField(max_length=10, choices=SEVERITY_CHOICES, default="faible")
     remedy = models.TextField(blank=True)
-    dosage = models.CharField(max_length=255, blank=True)
+    dosage = models.TextField(blank=True)
     symptoms = models.TextField(blank=True)
     prevention = models.TextField(blank=True)
     confidence = models.FloatField(default=0)

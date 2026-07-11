@@ -101,7 +101,7 @@ DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
-        ssl_require=True # Important pour Railway
+        ssl_require=True if os.environ.get('DATABASE_URL', '').startswith('postgres') else False
     )
 }
 AUTH_USER_MODEL = "core.User"
