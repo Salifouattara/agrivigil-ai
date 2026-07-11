@@ -61,13 +61,20 @@ def clean_photo_url(value):
     if not isinstance(value, str) or not value:
         return value
 
-    cleaned = value.replace("%EF%BF%BD", "")
+    cleaned = value.strip().replace("%EF%BF%BD", "").replace("�", "")
+    cleaned = re.sub(r"https?:/res\.cloudinary\.com/", "https://res.cloudinary.com/", cleaned)
+
+    if "res.cloudinary.com/" in cleaned:
+        parts = re.split(r"https?://res\.cloudinary\.com/", cleaned)
+        if len(parts) > 1:
+            suffix = parts[-1].lstrip("/")
+            cleaned = f"https://res.cloudinary.com/{suffix}"
+
     parsed = urllib.parse.urlsplit(cleaned)
     if not parsed.scheme or not parsed.netloc:
         return cleaned
 
     path = urllib.parse.unquote(parsed.path)
-    path = path.replace("�", "")
     path = re.sub(r"[^A-Za-z0-9/._-]", "", path)
     return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, path, parsed.query, parsed.fragment))
 
@@ -145,10 +152,11 @@ class CropScanSerializer(serializers.ModelSerializer):
         extra_kwargs = {"image": {"write_only": True, "required": False}}
 
     def get_image_url(self, obj):
-        request = self.context.get("request")
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        return obj.image.url if obj.image else None
+        if not obj.image:
+            return None
+
+        url = obj.image.url
+        return clean_photo_url(url)
 
 
 class HealthAlertSerializer(serializers.ModelSerializer):
@@ -170,10 +178,11 @@ class HealthAlertSerializer(serializers.ModelSerializer):
         extra_kwargs = {"image": {"write_only": True, "required": False}}
 
     def get_image_url(self, obj):
-        request = self.context.get("request")
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        return obj.image.url if obj.image else None
+        if not obj.image:
+            return None
+
+        url = obj.image.url
+        return clean_photo_url(url)
 
     def get_distance_km(self, obj):
         # Calculé côté vue (haversine) et injecté dans le contexte ; 0 par défaut
@@ -238,14 +247,11 @@ class ExpertSerializer(serializers.ModelSerializer):
         return f"https://wa.me/{normalized}"
 
     def get_photo_url(self, obj):
-        request = self.context.get("request")
-        photo_url = None
-        if obj.photo and request:
-            photo_url = request.build_absolute_uri(obj.photo.url)
-        elif obj.photo:
-            photo_url = obj.photo.url
+        if not obj.photo:
+            return None
 
-        return clean_photo_url(photo_url) if photo_url else None
+        url = obj.photo.url
+        return clean_photo_url(url)
 
 
 class ExpertMessageSerializer(serializers.ModelSerializer):
@@ -261,7 +267,8 @@ class ExpertMessageSerializer(serializers.ModelSerializer):
         extra_kwargs = {"image": {"write_only": True, "required": False}}
 
     def get_image_url(self, obj):
-        request = self.context.get("request")
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        return obj.image.url if obj.image else None
+        if not obj.image:
+            return None
+
+        url = obj.image.url
+        return clean_photo_url(url)

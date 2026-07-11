@@ -30,3 +30,10 @@ class ExpertSerializerTests(SimpleTestCase):
             clean_photo_url(url),
             "https://res.cloudinary.com/demo/image/upload/experts/photos/Capture_dcran_2026-07-09_084039.png",
         )
+
+    def test_clean_photo_url_recovers_from_double_cloudinary_prefix(self):
+        url = "https://res.cloudinary.com/gymzkxvk/image/upload/v1783760669/https:/res.cloudinary.com/gymzkxvk/scans/2026/07/FLI-LSD-Klinik-Kopf_original_web_liv_j5qfen.avif"
+        self.assertEqual(
+            clean_photo_url(url),
+            "https://res.cloudinary.com/gymzkxvk/scans/2026/07/FLI-LSD-Klinik-Kopf_original_web_liv_j5qfen.avif",
+        )
