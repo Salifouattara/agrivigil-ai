@@ -76,17 +76,19 @@ def clean_photo_url(value):
         if parsed.scheme and parsed.netloc:
             path = urllib.parse.unquote(parsed.path)
             path = re.sub(r"[^A-Za-z0-9/._-]", "", path)
+            if not any(path.lower().endswith(ext) for ext in (".jpg", ".jpeg", ".png", ".avif")):
+                path = f"{path}.avif"
             return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, path, parsed.query, parsed.fragment))
         return cleaned
 
-    media_base = getattr(settings, "MEDIA_URL", "")
-    if not media_base:
-        return cleaned
-
     normalized_path = cleaned.lstrip("/")
-    if media_base.startswith(("http://", "https://")):
-        return urllib.parse.urljoin(media_base.rstrip("/") + "/", normalized_path)
-    return f"{media_base.rstrip('/')}/{normalized_path}"
+    if normalized_path.startswith("res.cloudinary.com/"):
+        normalized_path = normalized_path.split("res.cloudinary.com/", 1)[1]
+
+    if not any(normalized_path.lower().endswith(ext) for ext in (".jpg", ".jpeg", ".png", ".avif")):
+        normalized_path = f"{normalized_path}.avif"
+
+    return f"https://res.cloudinary.com/gymzkxvk/{normalized_path.lstrip('/')}"
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -165,17 +167,11 @@ class CropScanSerializer(serializers.ModelSerializer):
         if not obj.image:
             return None
 
-        image_value = getattr(obj.image, "name", None) or str(obj.image)
+        image_value = getattr(obj.image, "name", None) or getattr(obj.image, "url", None) or str(obj.image)
         if not image_value:
             return None
 
-        if isinstance(image_value, str) and image_value.startswith("http"):
-            return image_value
-
-        if hasattr(obj.image, "url") and isinstance(obj.image.url, str) and obj.image.url.startswith("http"):
-            return obj.image.url
-
-        return f"https://res.cloudinary.com/gymzkxvk/{image_value.lstrip('/')}"
+        return clean_photo_url(image_value)
 
     def get_image_url(self, obj):
         return self.get_image(obj)
@@ -203,8 +199,8 @@ class HealthAlertSerializer(serializers.ModelSerializer):
         if not obj.image:
             return None
 
-        url = obj.image.url
-        return clean_photo_url(url)
+        image_value = getattr(obj.image, "name", None) or getattr(obj.image, "url", None) or str(obj.image)
+        return clean_photo_url(image_value)
 
     def get_distance_km(self, obj):
         # Calculé côté vue (haversine) et injecté dans le contexte ; 0 par défaut
@@ -272,8 +268,8 @@ class ExpertSerializer(serializers.ModelSerializer):
         if not obj.photo:
             return None
 
-        url = obj.photo.url
-        return clean_photo_url(url)
+        image_value = getattr(obj.photo, "name", None) or getattr(obj.photo, "url", None) or str(obj.photo)
+        return clean_photo_url(image_value)
 
 
 class ExpertMessageSerializer(serializers.ModelSerializer):
@@ -292,5 +288,5 @@ class ExpertMessageSerializer(serializers.ModelSerializer):
         if not obj.image:
             return None
 
-        url = obj.image.url
-        return clean_photo_url(url)
+        image_value = getattr(obj.image, "name", None) or getattr(obj.image, "url", None) or str(obj.image)
+        return clean_photo_url(image_value)

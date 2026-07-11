@@ -38,9 +38,20 @@ class ExpertSerializerTests(SimpleTestCase):
             "https://res.cloudinary.com/gymzkxvk/scans/2026/07/FLI-LSD-Klinik-Kopf_original_web_liv_j5qfen.avif",
         )
 
-    @override_settings(MEDIA_URL="https://res.cloudinary.com/demo/")
     def test_clean_photo_url_prefixes_relative_path(self):
         self.assertEqual(
             clean_photo_url("scans/2026/07/file.jpg"),
-            "https://res.cloudinary.com/demo/scans/2026/07/file.jpg",
+            "https://res.cloudinary.com/gymzkxvk/scans/2026/07/file.jpg",
+        )
+
+    def test_clean_photo_url_appends_avif_for_missing_extension(self):
+        self.assertEqual(
+            clean_photo_url("scans/2026/07/plant-photo"),
+            "https://res.cloudinary.com/gymzkxvk/scans/2026/07/plant-photo.avif",
+        )
+
+    def test_clean_photo_url_keeps_absolute_url_and_appends_extension(self):
+        self.assertEqual(
+            clean_photo_url("https://res.cloudinary.com/gymzkxvk/scans/2026/07/plant-photo"),
+            "https://res.cloudinary.com/gymzkxvk/scans/2026/07/plant-photo.avif",
         )
