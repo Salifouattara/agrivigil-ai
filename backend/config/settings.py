@@ -80,6 +80,8 @@ STORAGES = {
     },
 }
 
+STATICFILES_STORAGE = STORAGES["staticfiles"]["BACKEND"]  # Compatibility with django-cloudinary-storage collectstatic
+
 ROOT_URLCONF = "config.urls"
 
 CSRF_TRUSTED_ORIGINS = [
