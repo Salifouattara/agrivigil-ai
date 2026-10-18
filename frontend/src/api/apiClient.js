@@ -5,7 +5,7 @@
 // qu'avant (auth / entities / integrations), pour ne pas avoir à réécrire
 // chaque écran : seule l'implémentation change, l'interface reste stable.
 
-const configuredBase = (import.meta.env.VITE_API_BASE_URL || 'https://agrivigil-ai-production.up.railway.app').trim().replace(/\/$/, '');
+const configuredBase = (import.meta.env.VITE_API_BASE_URL || 'https://agrivigil-backend-production.up.railway.app').trim().replace(/\/$/, '');
 const API_BASE_URL = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
 
 const ACCESS_KEY = 'agrivigil_access_token';
