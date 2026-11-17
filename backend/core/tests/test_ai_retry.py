@@ -53,3 +53,15 @@ class AIRequestRetryTests(SimpleTestCase):
         self.assertEqual(code, 502)
         self.assertNotIn('private-key-and-photo-data', message)
         self.assertNotIn('private-key-and-photo-data', '\n'.join(logs.output))
+
+    def test_daily_quota_message_does_not_promise_an_immediate_recovery(self):
+        error = RuntimeError('private-provider-message')
+        error.code = 429
+        error.details = {'error': {'details': [{'violations': [
+            {'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaValue': '20'},
+        ]}]}}
+        with self.assertLogs('core.ai_service') as logs:
+            message, code = public_ai_error(error)
+        self.assertEqual(code, 429)
+        self.assertIn('quota quotidien', message)
+        self.assertNotIn('private-provider-message', '\n'.join(logs.output))

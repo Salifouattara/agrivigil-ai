@@ -63,5 +63,16 @@ def public_ai_error(exc):
         return str(exc), 503
     code = getattr(exc, "code", None)
     if code == 429 or "RESOURCE_EXHAUSTED" in str(exc):
+        details = getattr(exc, "details", {})
+        daily_limit = False
+        if isinstance(details, dict):
+            for item in details.get("error", details).get("details", []):
+                for violation in item.get("violations", []):
+                    logger.warning("AI quota exceeded: quota=%s limit=%s", violation.get("quotaId"), violation.get("quotaValue"))
+                    daily_limit = daily_limit or "PerDay" in str(violation.get("quotaId", ""))
+                if "retryDelay" in item:
+                    logger.warning("AI quota retry delay: %s", item["retryDelay"])
+        if daily_limit:
+            return "Le quota quotidien du service IA est atteint. Réessaie après sa réinitialisation.", 429
         return "Le quota du service IA est momentanément atteint. Réessaie plus tard.", 429
     return "Le service IA est momentanément indisponible. Réessaie dans quelques instants.", 502
