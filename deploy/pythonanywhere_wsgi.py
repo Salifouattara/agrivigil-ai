@@ -1,5 +1,6 @@
 import os
 import sys
+sys.dont_write_bytecode = True
 from pathlib import Path
 from dotenv import load_dotenv
 

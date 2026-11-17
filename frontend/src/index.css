@@ -284,7 +284,7 @@ body { margin: 0; background: #f3f6f2; }
   .av-top-action { display: flex; }
 }
 @media (min-width: 1024px) {
-  .av-sidebar { position: fixed; inset: 0 auto 0 0; width: 248px; display: flex; flex-direction: column; padding: 32px 20px 20px; background: #fff; border-right: 1px solid #e1e8df; z-index: 30; }
+  .av-sidebar { position: fixed; inset: 0 auto 0 0; width: 248px; display: flex; flex-direction: column; overflow-y: auto; padding: 32px 20px 20px; background: #fff; border-right: 1px solid #e1e8df; z-index: 30; }
   .av-sidebar .av-brand { padding: 0 8px; }
   .av-side-nav { margin-top: 48px; display: grid; gap: 30px; }
   .av-nav-heading { margin: 0 15px 10px; color: #87968b; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.6px; }

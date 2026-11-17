@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+
 root = Path(__file__).resolve().parents[1]
 backend = root / "backend"
 venv = root / ".venv"
@@ -13,7 +15,7 @@ if not (backend / ".env").is_file():
 if not venv.exists():
     subprocess.run([sys.executable, "-m", "venv", str(venv)], check=True)
 python = venv / "bin" / "python"
-subprocess.run([str(python), "-m", "pip", "install", "--no-cache-dir", "-r", str(backend / "requirements-pythonanywhere.txt")], check=True)
+subprocess.run([str(python), "-m", "pip", "install", "--no-cache-dir", "--no-compile", "-r", str(backend / "requirements-pythonanywhere.txt")], check=True)
 if (backend / "db.sqlite3").exists():
     import sqlite3
     from datetime import datetime
