@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
-  Loader2, Leaf, AlertTriangle, Bell, ShieldCheck,
+  Loader2, Leaf, AlertTriangle, Bell, ShieldCheck, Camera, ImagePlus,
   ClipboardCheck, ShieldAlert, CloudSun, TrendingDown, TrendingUp, Minus, Sprout, PawPrint,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ export default function ScanIA() {
   const [weather, setWeather] = useState(null);
   const [topAlert, setTopAlert] = useState(null);
   const fileRef = useRef(null);
+  const cameraRef = useRef(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -89,6 +90,7 @@ export default function ScanIA() {
 
   const handleFile = (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
     setImage(URL.createObjectURL(file));
     setImageFile(file);
@@ -191,8 +193,8 @@ export default function ScanIA() {
 
         {/* Carte de scan avec animation */}
         <div
-          onClick={() => fileRef.current?.click()}
-          className="scan-frame mt-4 aspect-[4/3] cursor-pointer" role="button" tabIndex={0} aria-label="Choisir une photo à analyser" onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); fileRef.current?.click(); } }}
+          onClick={() => { if (!loading) fileRef.current?.click(); }}
+          className="scan-frame mt-4 aspect-[4/3] cursor-pointer" role="button" tabIndex={loading ? -1 : 0} aria-disabled={loading} aria-label="Importer une photo de la galerie" onKeyDown={event => { if (!loading && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); fileRef.current?.click(); } }}
         >
           <span className="corner tl" /><span className="corner tr" /><span className="corner bl" /><span className="corner br" />
           {image ? (
@@ -218,7 +220,27 @@ export default function ScanIA() {
               </span>
             </div>
           )}
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
+        </div>
+
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" aria-label="Importer une photo de la galerie" disabled={loading} onChange={handleFile} />
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" aria-label="Prendre une photo" disabled={loading} onChange={handleFile} />
+        <div className="mt-3 grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
+          <Button
+            type="button"
+            disabled={loading}
+            onClick={() => cameraRef.current?.click()}
+            className="h-auto min-h-12 min-w-0 whitespace-normal rounded-2xl border border-white/25 bg-white/10 px-3 py-3 text-xs font-semibold leading-tight text-white hover:bg-white/20"
+          >
+            <Camera className="mr-2 h-4 w-4 shrink-0" aria-hidden="true" /> Prendre une photo
+          </Button>
+          <Button
+            type="button"
+            disabled={loading}
+            onClick={() => fileRef.current?.click()}
+            className="h-auto min-h-12 min-w-0 whitespace-normal rounded-2xl bg-white px-3 py-3 text-xs font-semibold leading-tight text-[#12523A] hover:bg-white/90"
+          >
+            <ImagePlus className="mr-2 h-4 w-4 shrink-0" aria-hidden="true" /> Importer de la galerie
+          </Button>
         </div>
 
         {image && !loading && (
