@@ -51,8 +51,8 @@ export default function HealthAlertsFeed({ compact = true }) {
             <ShieldAlert className="w-4 h-4 text-[#D6473B]" strokeWidth={1.5} />
           </div>
           <div>
-            <h3 className="font-heading text-[13px] font-bold text-[#10221A]">Alertes sanitaires à proximité</h3>
-            <p className="text-[10px] text-[#8A9A91]">Rayon de 10 km</p>
+            <h3 className="font-heading text-[13px] font-bold text-[#10221A]">Signalements de la communauté</h3>
+            <p className="text-[10px] text-[#8A9A91]">Observations déclarées</p>
           </div>
         </div>
         {compact && (
@@ -82,7 +82,7 @@ export default function HealthAlertsFeed({ compact = true }) {
                 <div className="flex items-center justify-between mt-0.5">
                   <span className="text-[10px] text-[#8A9A91] flex items-center gap-1">
                     <MapPin className="w-2.5 h-2.5" />
-                    {isOwn ? 'Votre signalement' : `${alert.distance_km} km · ${alert.location_label || 'À proximité'}`}
+                    {isOwn ? 'Votre signalement' : (alert.location_label || 'Localisation non précisée')}
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-[#C4D2CB]">{moment(alert.created_date).fromNow()}</span>

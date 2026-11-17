@@ -164,7 +164,7 @@ export default function ScanIA() {
             </span>
             <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/85">AgrivigilAI</span>
           </div>
-          <button onClick={() => navigate('/communaute')} className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white">
+          <button aria-label="Consulter les signalements" onClick={() => navigate('/communaute')} className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white">
             <Bell className="w-4 h-4" />
             {stats.alerts > 0 && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#FF6B57] ring-2 ring-[#0B3D2A]" />}
           </button>
@@ -173,7 +173,7 @@ export default function ScanIA() {
         <p className="mt-4 text-[13px] font-medium text-white/70">Bonjour, bon retour sur AgrivigilAI</p>
         <h1 className="font-heading text-[28px] leading-tight font-extrabold text-white mt-0.5">Diagnostic IA</h1>
         <p className="text-[13px] text-white/70 mt-1.5 leading-relaxed max-w-[85%]">
-          Scannez vos cultures et vos animaux, détectez les maladies en temps réel.
+          Analysez une photo de vos cultures ou animaux pour identifier les signes à surveiller.
         </p>
 
         {/* Toggle plante / animal */}
@@ -312,9 +312,9 @@ export default function ScanIA() {
               <AlertTriangle className="w-[18px] h-[18px]" />
             </span>
             <div className="min-w-0">
-              <p className="text-[12px] font-bold text-[#D6473B]">Alerte de Proximité</p>
+              <p className="text-[12px] font-bold text-[#D6473B]">Signalement de la communauté</p>
               <p className="text-[13px] text-[#10221A] mt-0.5 leading-snug">
-                <strong>{topAlert.disease_name}</strong> signalé{topAlert.distance_km ? ` à moins de ${Math.ceil(topAlert.distance_km)} km` : ' près de chez vous'}.
+                <strong>{topAlert.disease_name}</strong> observé{topAlert.location_label ? ` · ${topAlert.location_label}` : ' par la communauté' }.
               </p>
             </div>
             <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#D6473B] severity-pulse" />
