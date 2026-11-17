@@ -81,11 +81,11 @@ Les diagnostics visuels et calculs servent d'aide à la décision ; ils ne rempl
 
 `docker compose up --build` charge également `backend/.env` et expose les mêmes ports locaux. Ne pas lancer Docker et le lanceur Windows simultanément. Le parcours Docker n'a pas été revalidé pendant la préparation locale.
 
-Les modifications de cette préparation sont locales. Le site Vercel et le service Railway ne sont pas redéployés par les scripts. Pour un hébergement Django distinct, configurer l'URL de l'API, CORS, les secrets, une base persistante et le stockage des médias avant de publier.
+Le frontend publié sur Vercel utilise le backend PythonAnywhere. Les lanceurs Windows ne modifient que les serveurs locaux. Les anciens services Railway et leur volume PostgreSQL ont été supprimés ; les données actives sont conservées dans SQLite et les médias sur PythonAnywhere.
 
 ## Limites actuelles
 
-L'envoi de mails/SMS, la connexion Google et la synthèse vocale Dioula ne sont pas configurés pour la démonstration. Utiliser le compte démo existant. La lecture vocale française dépend du navigateur et des voix installées. Le contrôle visuel automatisé du navigateur a été indisponible pendant cette intervention ; les validations réalisées portent sur le code, la compilation et les appels API réels.
+L'envoi de mails/SMS, la connexion Google et la synthèse vocale Dioula ne sont pas configurés pour la démonstration. Utiliser le compte démo existant. La lecture vocale française dépend du navigateur et des voix installées. Le rendu sur ordinateur et les quatre portraits du Hub Experts ont été vérifiés dans le navigateur. Le contrôle visuel mobile reste à compléter sur appareil réel ; les règles adaptatives, la compilation et les appels API ont été vérifiés.
 
 
 ## Version de présentation — novembre 2026
@@ -97,9 +97,9 @@ L'envoi de mails/SMS, la connexion Google et la synthèse vocale Dioula ne sont 
 
 ### PythonAnywhere gratuit
 
-La release est générée par `python deploy/build_release.py`. Elle exclut les secrets, bases de données et photos de scans. Le script `deploy/setup_pythonanywhere.py` installe les dépendances ciblées, conserve une sauvegarde de la base, applique les migrations et collecte les fichiers statiques. L’ancienne installation `/home/Salif/agrivigil-ai` est préservée ; la nouvelle release est dans `/home/Salif/agrivigil-release-20261117`.
+La release est générée par `python deploy/build_release.py`. Elle exclut les secrets, bases de données et photos de scans. Le script `deploy/setup_pythonanywhere.py` installe les dépendances ciblées, conserve une sauvegarde de la base, applique les migrations et collecte les fichiers statiques. L’installation active est dans `/home/Salif/agrivigil-release-20261117`. Les copies PythonAnywhere obsolètes et les anciens services Railway ont été supprimés après validation de la version active.
 
-Configuration Web prévue : Python 3.13, virtualenv `/home/Salif/agrivigil-release-20261117/.venv`, WSGI fourni dans `deploy/pythonanywhere_wsgi.py`, mappings `/static/` vers `backend/staticfiles` et `/media/` vers `backend/media`. Le fichier `backend/.env` distant contient les secrets, `DJANGO_DEBUG=False`, les hôtes autorisés et l’origine Vercel. Aucune clé Gemini ou météo ne doit se trouver dans les variables `VITE_*`.
+Configuration Web active : Python 3.13, virtualenv `/home/Salif/agrivigil-release-20261117/.venv`, WSGI fourni dans `deploy/pythonanywhere_wsgi.py`, mappings `/static/` vers `backend/staticfiles` et `/media/` vers `backend/media`. Le fichier `backend/.env` distant contient les secrets, `DJANGO_DEBUG=False`, les hôtes autorisés et l’origine Vercel. Aucune clé Gemini ou météo ne doit se trouver dans les variables `VITE_*`.
 
 L’offre gratuite comporte un seul worker, 512 MiB de stockage, des accès réseau sortants limités et une expiration du site à renouveler manuellement. Elle convient à une démonstration à faible charge, avec la version locale comme solution de repli. Documentation : https://help.pythonanywhere.com/pages/FreeAccountsFeatures/
 
@@ -110,3 +110,15 @@ L’offre gratuite comporte un seul worker, 512 MiB de stockage, des accès rés
 - Valider les recommandations agricoles sur le terrain et organiser la modération des signalements.
 - Automatiser les sauvegardes et définir les quotas d’utilisation de l’IA.
 - Tester et compléter les langues locales et la synthèse vocale sur les appareils visés.
+
+
+### État publié le 17 novembre 2026
+
+- Dépôt de référence : https://github.com/Salifouattara/agrivigil-ai — branche `main` uniquement.
+- Frontend : https://agrivigil-ai.vercel.app
+- Backend actif : https://salif.pythonanywhere.com/api/health/
+- Local : http://127.0.0.1:5173 (lanceur `Start-AgriVigil.ps1`).
+- Validations : 28 tests Django, compilation Vite, lint et typage ; parcours réel en ligne validé pour connexion, météo, calculateur, diagnostic photo, carnet, médias, conseils IA, chatbot et renouvellement JWT.
+- L’envoi d’e-mails n’étant pas configuré, les parcours d’inscription et de récupération sont fermés en production ; les codes de test ne peuvent plus être demandés par un client public.
+- Les experts affichés sont des profils de démonstration. Les signalements communautaires ne constituent pas des alertes sanitaires officielles.
+- PythonAnywhere gratuit : renouvellement manuel avant le 17 décembre 2026.
