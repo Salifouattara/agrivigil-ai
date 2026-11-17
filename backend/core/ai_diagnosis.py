@@ -6,7 +6,7 @@ import logging
 import random
 
 from django.conf import settings
-from .ai_service import AIUnavailableError, create_gemini_client, image_mime_type
+from .ai_service import AIUnavailableError, create_gemini_client, image_mime_type, run_ai_request
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ def diagnose_crop_image(image_bytes: bytes, declared_crop: str | None = None) ->
     Sans cle valide, le service est indisponible : aucun diagnostic simule.
     """
     if settings.GEMINI_API_KEY:
-        return _diagnose_with_gemini(image_bytes, declared_crop)
+        return run_ai_request(lambda: _diagnose_with_gemini(image_bytes, declared_crop))
 
     raise AIUnavailableError("Le diagnostic IA n'est pas encore configuré. Aucun diagnostic n'a été généré.")
 

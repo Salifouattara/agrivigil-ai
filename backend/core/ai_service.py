@@ -1,9 +1,14 @@
 """Shared Gemini configuration and public errors, without exposing credentials."""
 from io import BytesIO
+import logging
+import time
 
 from django.conf import settings
 from PIL import Image, UnidentifiedImageError
+from requests.exceptions import ConnectionError, Timeout
 from rest_framework.exceptions import ValidationError
+
+logger = logging.getLogger(__name__)
 
 
 class AIUnavailableError(RuntimeError):
@@ -15,6 +20,20 @@ def create_gemini_client():
     if not settings.GEMINI_API_KEY:
         raise AIUnavailableError("Le service IA n'est pas encore configuré.")
     return genai.Client(api_key=settings.GEMINI_API_KEY, http_options={"timeout": 45000})
+
+
+def run_ai_request(request):
+    """Retry one transient provider failure; never retry quota or invalid input."""
+    try:
+        return request()
+    except Exception as exc:
+        code = getattr(exc, "code", None)
+        if not isinstance(exc, (ConnectionError, Timeout)) and code not in {500, 502, 503, 504}:
+            raise
+        # Log metadata only: provider messages can contain credentials or user data.
+        logger.warning("Retrying AI request: error=%s code=%s", type(exc).__name__, code)
+        time.sleep(1)
+        return request()
 
 
 def image_mime_type(data):
@@ -39,6 +58,7 @@ def read_uploaded_image(image):
 
 
 def public_ai_error(exc):
+    logger.error("AI request failed: error=%s code=%s", type(exc).__name__, getattr(exc, "code", None))
     if isinstance(exc, AIUnavailableError):
         return str(exc), 503
     code = getattr(exc, "code", None)
