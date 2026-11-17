@@ -1,7 +1,7 @@
-"""Run against the local demo only. Real provider calls; no simulated responses.
+"""Verify the demo account end to end. Real provider calls; no simulated responses.
 
 Set AGRIVIGIL_DEMO_PASSWORD in the process environment before running.
-The scan, tracking and calculation are kept in the local demo account.
+Set AGRIVIGIL_API_URL to test the deployed backend. New demo records are kept.
 """
 import json
 import getpass
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import requests
 
-BASE = 'http://127.0.0.1:5185/api'
+BASE = os.environ.get('AGRIVIGIL_API_URL', 'http://127.0.0.1:5185/api').rstrip('/')
 session = requests.Session()
 
 

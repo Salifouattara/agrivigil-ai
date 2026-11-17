@@ -2,6 +2,7 @@ from .ai_service import read_uploaded_image, public_ai_error
 from django.db import connection
 import logging
 import random
+import secrets
 from datetime import date, timedelta
 
 from django.conf import settings
@@ -39,7 +40,7 @@ def _tokens_for(user):
 
 
 def _generate_otp(email, purpose):
-    code = f"{random.randint(0, 999999):06d}"
+    code = f"{secrets.randbelow(1000000):06d}"
     OneTimeCode.objects.create(email=email, code=code, purpose=purpose)
     # MVP : pas d'envoi réel d'email/SMS. On journalise pour la démo.
     # -> Brancher ici Africa's Talking (SMS) ou un service d'email en production.
@@ -55,6 +56,9 @@ class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        if not settings.DEBUG:
+            return Response({"detail": "L’inscription et la récupération par e-mail ne sont pas encore disponibles. Utilisez votre compte existant ou le compte de démonstration."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -64,7 +68,7 @@ class RegisterView(APIView):
         )
         code = _generate_otp(user.email, "register")
         response = {"detail": "Code de vérification envoyé."}
-        if request.data.get("debug"):
+        if settings.DEBUG and request.data.get("debug"):
             response["debug_otp_code"] = code  # pratique en développement/démo
         return Response(response, status=status.HTTP_201_CREATED)
 
@@ -73,6 +77,9 @@ class VerifyOtpView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        if not settings.DEBUG:
+            return Response({"detail": "L’inscription et la récupération par e-mail ne sont pas encore disponibles. Utilisez votre compte existant ou le compte de démonstration."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         serializer = VerifyOtpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]
@@ -103,6 +110,9 @@ class ResendOtpView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        if not settings.DEBUG:
+            return Response({"detail": "L’inscription et la récupération par e-mail ne sont pas encore disponibles. Utilisez votre compte existant ou le compte de démonstration."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         email = request.data.get("email")
         if not email:
             return Response({"detail": "Email requis."}, status=status.HTTP_400_BAD_REQUEST)
@@ -147,13 +157,16 @@ class ForgotPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        if not settings.DEBUG:
+            return Response({"detail": "L’inscription et la récupération par e-mail ne sont pas encore disponibles. Utilisez votre compte existant ou le compte de démonstration."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]
         response = {"detail": "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé."}
         if User.objects.filter(email__iexact=email).exists():
             code = _generate_otp(email, "reset_password")
-            if request.data.get("debug"):
+            if settings.DEBUG and request.data.get("debug"):
                 response["debug_reset_token"] = code
         return Response(response)
 
@@ -162,6 +175,9 @@ class ResetPasswordView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        if not settings.DEBUG:
+            return Response({"detail": "L’inscription et la récupération par e-mail ne sont pas encore disponibles. Utilisez votre compte existant ou le compte de démonstration."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data

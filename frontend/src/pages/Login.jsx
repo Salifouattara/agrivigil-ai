@@ -94,7 +94,7 @@ export default function Login() {
         <button type="button" onClick={() => { setEmail('demo@monapp.com'); setPassword('Demo1234'); setError(''); }} className="w-full rounded-2xl border border-[#dce7e0] bg-[#f4f7ef] px-4 py-4 mt-4 text-sm font-semibold text-[#12523A]">Découvrir avec le compte de démonstration</button>
         <p className="text-xs leading-relaxed text-center text-[#7c8a7e] mt-2">Les identifiants seront préremplis. Cliquez ensuite sur Se connecter.</p>
 
-        <div className="mt-6 text-center space-y-2">
+        {import.meta.env.DEV ? <div className="mt-6 text-center space-y-2">
           <Link to="/forgot-password" className="text-sm text-[#B4740E] font-body hover:underline">
             Mot de passe oublié ?
           </Link>
@@ -102,7 +102,7 @@ export default function Login() {
             Pas encore de compte ?{' '}
             <Link to="/register" className="text-[#12523A] font-semibold hover:underline">Créer un compte</Link>
           </p>
-        </div>
+        </div> : <p className="mt-6 text-center text-xs text-[#7c8a7e]">L’inscription et la récupération par e-mail seront disponibles prochainement.</p>}
       </div>
       </div>
     </div>

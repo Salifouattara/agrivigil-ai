@@ -13,7 +13,8 @@ foreach ($port in @(5185, 5173)) {
     }
 }
 New-Item -ItemType Directory -Path $runtimeDir -Force | Out-Null
-$pythonPath = (Get-Command python).Source
+$isolatedPython = Join-Path $runtimeDir 'pa-venv/Scripts/python.exe'
+$pythonPath = if (Test-Path $isolatedPython) { $isolatedPython } else { (Get-Command python).Source }
 $nodePath = (Get-Command node).Source
 & $pythonPath $managePath migrate --noinput
 if ($LASTEXITCODE -ne 0) { throw 'La preparation de la base a echoue.' }
