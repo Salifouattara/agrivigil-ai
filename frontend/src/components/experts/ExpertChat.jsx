@@ -20,8 +20,9 @@ export default function ExpertChat({ expert, onBack }) {
       .filter({ conversation_id: expert.id }, 'created_date', 50)
       .then(msgs => {
         setMessages(msgs);
-        setLoading(false);
-      });
+      })
+      .catch(() => setError('Impossible de charger la conversation.'))
+      .finally(() => setLoading(false));
     const unsub = db.entities.ExpertMessage.subscribe((event) => {
       if (event.type === 'create') {
         setMessages(prev => {
@@ -64,10 +65,10 @@ export default function ExpertChat({ expert, onBack }) {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="av-chat flex flex-col min-h-0">
       {/* Header */}
       <div className="px-3 py-3 flex items-center gap-3 bg-white border-b border-[#DCE7E0]/30">
-        <button onClick={onBack} className="w-9 h-9 rounded-lg bg-[#F7FAF6] flex items-center justify-center text-[#10221A] hover:bg-[#DCE7E0]/30">
+        <button aria-label="Revenir au Hub Experts" onClick={onBack} className="w-9 h-9 rounded-lg bg-[#F7FAF6] flex items-center justify-center text-[#10221A] hover:bg-[#DCE7E0]/30">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div
@@ -116,9 +117,9 @@ export default function ExpertChat({ expert, onBack }) {
                       ? 'bg-[#12523A] text-[#F7FAF6] rounded-br-md'
                       : 'bg-white border border-[#DCE7E0]/40 text-[#10221A] rounded-bl-md'
                   }`}>
-                    {msg.content}
+                    <span className="whitespace-pre-wrap break-words">{msg.content}</span>
                   </div>
-                  <p className={`text-[10px] text-[#DCE7E0] font-body mt-0.5 ${isMe ? 'text-right mr-1' : 'ml-1'}`}>
+                  <p className={`text-[10px] text-[#6a796e] font-body mt-0.5 ${isMe ? 'text-right mr-1' : 'ml-1'}`}>
                     {moment(msg.created_date).format('HH:mm')}
                   </p>
                 </div>

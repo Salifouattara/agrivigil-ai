@@ -25,9 +25,17 @@ load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-CHANGE-ME-IN-PRODUCTION")
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
+if not DEBUG and SECRET_KEY == "django-insecure-CHANGE-ME-IN-PRODUCTION":
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("DJANGO_SECRET_KEY must be configured in production.")
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "False") == "True"
+
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 INSTALLED_APPS = [
@@ -85,6 +93,7 @@ ROOT_URLCONF = "config.urls"
 
 CSRF_TRUSTED_ORIGINS = [
     "https://agrivigil-ai-production.up.railway.app",
+    "https://salif.pythonanywhere.com",
     "https://agrivigil-ai.vercel.app",
     "http://localhost:3000",
     "http://localhost:5173",
@@ -130,7 +139,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
+        default=f"sqlite:///{(BASE_DIR / 'db.sqlite3').as_posix()}",
         conn_max_age=600,
         ssl_require=True if os.environ.get('DATABASE_URL', '').startswith('postgres') else False
     )
@@ -190,11 +199,10 @@ SIMPLE_JWT = {
 # CORS — le frontend Vite tourne par défaut sur localhost:5173
 # ---------------------------------------------------------------------------
 
-# Force en dur pour tester
-CORS_ALLOWED_ORIGINS = [
-    "https://agrivigil-ai.vercel.app",
-    "http://localhost:5173",
-]
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get(
+    "CORS_ALLOWED_ORIGINS",
+    "https://agrivigil-ai.vercel.app,http://localhost:5173,http://127.0.0.1:5173",
+).split(",") if origin.strip()]
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
@@ -203,6 +211,7 @@ CORS_ALLOW_ALL_ORIGINS = False
 # Clés d'intégration futures (Gemini, Africa's Talking...) — voir README.md
 # ---------------------------------------------------------------------------
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY", "")
 AFRICAS_TALKING_API_KEY = os.environ.get("AFRICAS_TALKING_API_KEY", "")
 AFRICAS_TALKING_USERNAME = os.environ.get("AFRICAS_TALKING_USERNAME", "")
@@ -233,4 +242,4 @@ else:
     DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
     MEDIA_URL = "/media/"
     MEDIA_URL = '/media/'
-    
+

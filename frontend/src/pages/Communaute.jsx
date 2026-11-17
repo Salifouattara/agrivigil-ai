@@ -1,129 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ShieldAlert } from 'lucide-react';
-import abidjanMap from '@/assets/abidjan_map.png';
+import { ShieldCheck, MapPin, CalendarDays, Loader2, ArrowUpRight, Radio } from 'lucide-react';
+import { db } from '@/api/apiClient';
 
 export default function Communaute() {
-  return (
-    <div className="pb-6 bg-white min-h-full">
-      {/* Header */}
-      <div className="flex items-center px-4 pt-5 pb-3 bg-white border-b border-[#10221A]/[0.04]">
-        <Link
-          to="/"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EAF4EC] text-[#12523A] hover:bg-[#D4ECD8] transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </Link>
-        <h2 className="font-heading text-lg font-extrabold text-[#D6473B] text-center flex-1 pr-8">
-          Alerte Sanitaire
-        </h2>
-      </div>
-
-      <div className="px-4 mt-4 space-y-4">
-        {/* Banner alerte critique */}
-        <div className="rounded-3xl p-4 flex items-center gap-4 bg-[#D6473B] shadow-sm">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[#D6473B]">
-            <ShieldAlert className="w-7 h-7" />
-          </span>
-          <div>
-            <h3 className="font-heading text-white text-lg font-extrabold leading-tight">
-              Peste Porcine Africaine
-            </h3>
-            <p className="text-[12px] text-white/85 mt-0.5 font-medium">
-              Alerte critique dans votre zone
-            </p>
-          </div>
-        </div>
-
-        {/* Carte stylisée avec fond image */}
-        <div className="relative rounded-3xl overflow-hidden h-52 border border-[#10221A]/[0.06] shadow-sm bg-gray-100">
-          <img
-            src={abidjanMap}
-            alt="Carte d'Abidjan"
-            className="w-full h-full object-cover animate-fade-in"
-          />
-          {/* Cercle de rayon 10 km */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-[160px] h-[160px] rounded-full border-2 border-[#D6473B] bg-[#D6473B]/5 pointer-events-none" />
-          </div>
-
-          {/* Points de foyers */}
-          <div className="absolute top-[23%] left-[19%] w-3 h-3 bg-[#D6473B] rounded-full border-2 border-white shadow-md" />
-          <div className="absolute top-[48%] left-[49%] w-3 h-3 bg-[#D6473B] rounded-full border-2 border-white shadow-md" />
-          <div className="absolute top-[62%] left-[49%] w-3 h-3 bg-[#D6473B] rounded-full border-2 border-white shadow-md" />
-          <div className="absolute top-[45%] left-[86%] w-3 h-3 bg-[#D6473B] rounded-full border-2 border-white shadow-md" />
-          <div className="absolute top-[38%] left-[42%] w-3 h-3 bg-[#D6473B] rounded-full border-2 border-white shadow-md" />
-
-          {/* Badges */}
-          <span className="absolute top-3 left-3 px-3 py-1 bg-[#D6473B] text-white text-[10px] font-extrabold uppercase rounded-full shadow-sm tracking-wider">
-            5 Foyers Signalés
-          </span>
-          <span className="absolute bottom-3 right-3 px-3 py-1 bg-white border border-[#D6473B] text-[#D6473B] text-[10px] font-extrabold uppercase rounded-full shadow-sm tracking-wider">
-            Rayon 10 KM
-          </span>
-        </div>
-
-        {/* État de l'épidémie */}
-        <div className="card-soft rounded-3xl p-4 bg-white border border-[#10221A]/[0.06] shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-[12px] font-extrabold text-[#12523A] uppercase tracking-wider">
-              État de l'épidémie
-            </h4>
-            <span className="px-3 py-0.5 bg-[#E8F8EE] border border-[#1B7049]/10 text-[#1B7049] text-[11px] font-extrabold uppercase rounded-full">
-              Contenue
-            </span>
-          </div>
-
-          {/* Jauge */}
-          <div className="relative h-2 rounded-full mt-4" style={{ background: 'linear-gradient(90deg, #D6473B 0%, #E8B84B 35%, #F2C879 70%, #1B7049 100%)' }}>
-            <div
-              className="absolute -top-1.5 right-0 h-5 w-5 rounded-full bg-white border-[3px] border-[#10221A] shadow-md"
-            />
-          </div>
-
-          <div className="flex justify-between mt-2.5">
-            <span className="text-[10px] text-[#8A9A91] font-medium">Émergence</span>
-            <span className="text-[10px] text-[#8A9A91] font-medium">Propagation</span>
-            <span className="text-[10px] text-[#8A9A91] font-medium">Pic</span>
-            <span className="text-[10px] text-[#1B7049] font-bold">Contenue</span>
-          </div>
-        </div>
-
-        {/* Recommandations */}
-        <div className="pt-2">
-          <h4 className="text-[12px] font-extrabold text-[#12523A] uppercase tracking-wider mb-3">
-            Recommandations de protection
-          </h4>
-          <div className="space-y-3">
-            <div className="card-soft rounded-2xl p-3.5 flex items-center gap-3 bg-white border border-[#10221A]/[0.06] shadow-sm">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FEECEC] text-[#D6473B] text-xs font-bold">
-                1
-              </span>
-              <p className="text-[13px] text-[#10221A] leading-normal">
-                <span className="font-bold">Isoler</span> immédiatement les animaux suspects
-              </p>
-            </div>
-
-            <div className="card-soft rounded-2xl p-3.5 flex items-center gap-3 bg-white border border-[#10221A]/[0.06] shadow-sm">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FEECEC] text-[#D6473B] text-xs font-bold">
-                2
-              </span>
-              <p className="text-[13px] text-[#10221A] leading-normal">
-                <span className="font-bold">Désinfecter</span> les locaux et équipements
-              </p>
-            </div>
-
-            <div className="card-soft rounded-2xl p-3.5 flex items-center gap-3 bg-white border border-[#10221A]/[0.06] shadow-sm">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FEECEC] text-[#D6473B] text-xs font-bold">
-                3
-              </span>
-              <p className="text-[13px] text-[#10221A] leading-normal">
-                <span className="font-bold">Vacciner</span> si possible, contacter un vétérinaire
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const load = () => {
+    setLoading(true); setError('');
+    db.entities.HealthAlert.list().then(setAlerts).catch(() => setError('Les signalements ne sont pas disponibles pour le moment.')).finally(() => setLoading(false));
+  };
+  useEffect(() => { load(); }, []);
+  return <div className="av-page pb-6">
+    <header className="av-page-header hero-gradient">
+      <div className="flex items-center gap-2 text-[#a9e4bb] text-xs uppercase tracking-widest font-semibold"><Radio size={17} />Veille collective</div>
+      <h1 className="font-heading text-[28px] font-extrabold text-white mt-4">Observer ensemble.<br />Mieux protéger les cultures.</h1>
+      <p className="text-sm text-white/75 mt-3 leading-relaxed">Les signalements partagés par la communauté AgriVigil. Chaque observation aide à mieux comprendre la situation sur le terrain.</p>
+    </header>
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 mb-5"><div><h2 className="text-lg font-heading font-bold">Signalements récents</h2><p className="text-xs text-[#6b7e70] mt-1">{loading ? 'Chargement…' : `${alerts.length} observation${alerts.length > 1 ? 's' : ''} enregistrée${alerts.length > 1 ? 's' : ''}`}</p></div><Link to="/" className="inline-flex items-center gap-2 text-sm text-[#12523A] font-semibold">Faire un diagnostic <ArrowUpRight size={16} /></Link></div>
+    <p className="rounded-xl border border-[#dde7d8] bg-[#edf3e8] p-4 text-xs leading-relaxed text-[#526b48] mb-5">Les signalements sont des observations déclarées, pas des foyers confirmés par une autorité sanitaire. Une validation sur le terrain reste nécessaire.</p>
+    {loading ? <div role="status" className="flex justify-center p-12"><Loader2 className="animate-spin text-[#12523A]" /><span className="sr-only">Chargement des signalements</span></div> : error ? <div role="alert" className="card-soft rounded-2xl p-6"><p>{error}</p><button onClick={load} className="mt-3 underline text-[#12523A]">Réessayer</button></div> : alerts.length === 0 ? <div className="card-soft rounded-3xl p-10 text-center"><ShieldCheck className="mx-auto text-[#12523A] mb-4" size={36} /><h3 className="font-heading font-bold">Aucun signalement enregistré</h3><p className="text-sm text-[#6b7e70] mt-2">Vous pouvez partager une observation depuis le résultat d’un diagnostic.</p></div> : <div className="av-alert-grid">{alerts.map(alert => <article key={alert.id} className="card-soft rounded-2xl p-6">
+      <div className="flex flex-wrap gap-2 mb-4"><span className="chip bg-[#eff4e9] text-[#526b38]">{alert.crop_name}</span><span className="chip bg-[#f7eee0] text-[#8c6428]">{alert.status === 'active' ? 'À vérifier' : 'Traitée'}</span></div>
+      <h3 className="font-heading text-lg font-bold">{alert.disease_name}</h3>
+      <div className="mt-4 flex flex-wrap gap-4 text-xs text-[#6b7e70]"><span className="flex items-center gap-1"><MapPin size={14} />{alert.location_label || 'Localisation non précisée'}</span><span className="flex items-center gap-1"><CalendarDays size={14} />{new Date(alert.created_date).toLocaleDateString('fr-FR')}</span></div>
+      <p className="mt-4 pt-4 border-t border-[#e5ebe0] text-xs text-[#6b7e70]">Gravité déclarée : {alert.severity}. Contactez un professionnel pour confirmer le diagnostic.</p>
+    </article>)}</div>}
+  </div>;
 }

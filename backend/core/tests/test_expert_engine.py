@@ -2,6 +2,8 @@ from unittest.mock import MagicMock, patch
 
 from django.test import SimpleTestCase, override_settings
 
+from core.ai_service import AIUnavailableError
+
 from core.expert_engine import (
     _build_prompt,
     _reply_simulated,
@@ -31,9 +33,9 @@ class ExpertEngineTests(SimpleTestCase):
         self.assertIn("Question de suivi", prompt)
 
     @override_settings(GEMINI_API_KEY="")
-    def test_generate_expert_reply_uses_simulated_without_api_key(self):
-        reply = generate_expert_reply(FakeExpert(), "Mes feuilles jaunissent")
-        self.assertIn("Mes feuilles jaunissent", reply)
+    def test_missing_key_does_not_fabricate_an_expert_reply(self):
+        with self.assertRaises(AIUnavailableError):
+            generate_expert_reply(FakeExpert(), "Question")
 
     @override_settings(GEMINI_API_KEY="test-key")
     @patch("core.expert_engine._reply_with_gemini")

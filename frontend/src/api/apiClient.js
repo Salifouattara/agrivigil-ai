@@ -5,7 +5,7 @@
 // qu'avant (auth / entities / integrations), pour ne pas avoir à réécrire
 // chaque écran : seule l'implémentation change, l'interface reste stable.
 
-const configuredBase = (import.meta.env.VITE_API_BASE_URL || 'https://agrivigil-backend-production.up.railway.app').trim().replace(/\/$/, '');
+const configuredBase = (import.meta.env.VITE_API_BASE_URL?.trim() || (import.meta.env.DEV ? 'http://127.0.0.1:5185' : 'https://agrivigil-ai-production.up.railway.app')).replace(/\/$/, '');
 const API_BASE_URL = configuredBase.endsWith('/api') ? configuredBase : `${configuredBase}/api`;
 
 const ACCESS_KEY = 'agrivigil_access_token';
@@ -17,7 +17,7 @@ function getAccessToken() {
 function getRefreshToken() {
   return localStorage.getItem(REFRESH_KEY);
 }
-function setTokens({ access_token, refresh_token }) {
+function setTokens({ access_token = undefined, refresh_token = undefined }) {
   if (access_token) localStorage.setItem(ACCESS_KEY, access_token);
   if (refresh_token) localStorage.setItem(REFRESH_KEY, refresh_token);
 }
@@ -42,13 +42,17 @@ async function refreshAccessToken() {
     throw new Error('Session expirée');
   }
   const data = await res.json();
-  setTokens({ access_token: data.access });
+  setTokens({ access_token: data.access, refresh_token: data.refresh });
   return data.access;
 }
 
 // `body` peut être un objet JSON classique OU une instance de FormData
 // (utilisée automatiquement dès qu'un fichier est présent, ex: images).
+/** @param {string} path
+ * @param {{method?: string, body?: any, isForm?: boolean, retry?: boolean}} [options]
+ */
 async function request(path, { method = 'GET', body, isForm = false, retry = true } = {}) {
+  /** @type {Record<string, string>} */
   const headers = {};
   const token = getAccessToken();
   const isPublicAuthPath =
@@ -80,9 +84,7 @@ async function request(path, { method = 'GET', body, isForm = false, retry = tru
 
   if (!res.ok) {
     const message = getApiErrorMessage(res, data);
-    const error = new Error(message);
-    error.status = res.status;
-    error.data = data;
+    const error = Object.assign(new Error(message), { status: res.status, data });
     throw error;
   }
   return data;
@@ -149,7 +151,7 @@ const auth = {
     window.alert("La connexion via Google n'est pas encore disponible sur cette version. Utilisez votre email et mot de passe.");
   },
 
-  async register({ email, password, full_name }) {
+  async register({ email, password, full_name = '' }) {
     const body = { email, password, full_name };
     // En développement, demander au backend de renvoyer le code OTP pour démo
     if (import.meta.env.DEV || import.meta.env.VITE_DEBUG_OTP === 'true') {
@@ -199,7 +201,7 @@ const auth = {
 
 function makeListCreateEntity(basePath) {
   return {
-    async list() {
+    async list(_sort = undefined, _limit = undefined) {
       const data = await request(`${basePath}/`);
       return Array.isArray(data) ? data : data.results || [];
     },
@@ -244,7 +246,7 @@ function makeListCreateEntity(basePath) {
         }
       };
 
-      fetchItems().then((items) => { seenIds = new Set(items.map((i) => i.id)); });
+      fetchItems().then((items) => { seenIds = new Set(items.map((i) => i.id)); }).catch(() => {});
       const timer = setInterval(poll, intervalMs);
       return () => { stopped = true; clearInterval(timer); };
     },
@@ -279,7 +281,7 @@ const integrations = {
     // Analyse réelle d'une image de culture (voir ScanIA.jsx).
     // Remplace l'ancien flux Base44 (UploadFile + InvokeLLM générique) par
     // un appel unique et explicite à l'endpoint /scans/analyze/.
-    async AnalyzeCropImage(file, { location_lat, location_lng, crop_name, subject_type, tracking_id, new_tracking_name } = {}) {
+    async AnalyzeCropImage(file, { location_lat = undefined, location_lng = undefined, crop_name = undefined, subject_type = undefined, tracking_id = undefined, new_tracking_name = undefined } = {}) {
       const form = toFormData({ image: file, location_lat, location_lng, crop_name, subject_type, tracking_id, new_tracking_name });
       return request('/scans/analyze/', { method: 'POST', body: form, isForm: true });
     },

@@ -2,7 +2,7 @@ import { db } from '@/api/apiClient';
 
 import React, { useState, useEffect } from 'react';
 
-import { Loader2, Sparkles, PhoneCall, MessageSquare } from 'lucide-react';
+import { Loader2, MessagesSquare, PhoneCall, MessageSquare } from 'lucide-react';
 import ExpertCard from '@/components/experts/ExpertCard';
 import ExpertChat from '@/components/experts/ExpertChat';
 import WaxDivider from '@/components/ui/WaxDivider';
@@ -73,22 +73,22 @@ export default function HubExperts() {
   };
 
   return (
-    <div className="pb-6">
-      <div className="hero-gradient px-5 pt-6 pb-8 rounded-b-[36px]">
+    <div className="av-page page-hubexperts pb-6">
+      <div className="av-page-header hero-gradient px-5 pt-6 pb-8 rounded-b-[36px]">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/15 text-[#7CF2B8]">
-            <Sparkles className="w-4 h-4" strokeWidth={2.2} />
+            <MessagesSquare className="w-4 h-4" strokeWidth={2.2} />
           </span>
           <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/85">Assistance</span>
         </div>
         <h1 className="font-heading text-[26px] font-extrabold text-white mt-3">Hub Experts</h1>
         <p className="text-[13px] text-white/70 mt-1.5 leading-relaxed max-w-[90%]">
-          Posez vos questions à un chatbot ou contactez un professionnel de terrain.
+          Posez vos questions à un chatbot ou découvrez le futur réseau de professionnels de terrain.
         </p>
 
         <div className="mt-4 rounded-3xl bg-white/10 p-3 flex items-center gap-3">
           <div className="rounded-2xl bg-white/15 p-2.5 text-[#9CF7C4] shrink-0">
-            <Sparkles className="w-5 h-5" />
+            <MessagesSquare className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-heading text-[13px] font-bold text-white">Chatbot Agrivigil IA</p>
@@ -105,8 +105,8 @@ export default function HubExperts() {
 
       <div className="px-4 -mt-2 relative z-10">
         <div className="mt-3">
-          <h3 className="font-heading text-[15px] font-bold text-[#10221A]">Experts professionnels</h3>
-          <p className="text-xs text-[#8A9A91] mt-0.5">Agronomes et vétérinaires disponibles pour contact direct.</p>
+          <h3 className="font-heading text-[15px] font-bold text-[#10221A]">Le réseau d’accompagnement</h3>
+          <p className="text-xs text-[#8A9A91] mt-0.5">Profils de démonstration : les coordonnées et partenariats restent à valider.</p>
         </div>
 
         <div className="mt-3 space-y-3">
@@ -118,12 +118,12 @@ export default function HubExperts() {
             <p className="text-sm text-red-600 font-body text-center py-8">{error}</p>
           ) : (
             <>
-                <div className="space-y-4">
+                <div className="av-expert-section space-y-7">
                 <div>
                   <h3 className="font-heading text-sm font-bold text-[#12523A] mb-2 flex items-center gap-2">
                     <span className="w-1.5 h-4 bg-[#12523A] rounded-full" /> Médecins de plantes
                   </h3>
-                  <div className="space-y-2">
+                  <div className="av-expert-grid">
                     {plantDocs.map(e => <ExpertCard key={e.id} expert={e} onContact={setContactExpert} />)}
                   </div>
                 </div>
@@ -134,7 +134,7 @@ export default function HubExperts() {
                   <h3 className="font-heading text-sm font-bold text-[#B4740E] mb-2 flex items-center gap-2">
                     <span className="w-1.5 h-4 bg-[#B4740E] rounded-full" /> Vétérinaires
                   </h3>
-                  <div className="space-y-2">
+                  <div className="av-expert-grid">
                     {vets.map(e => <ExpertCard key={e.id} expert={e} onContact={setContactExpert} />)}
                   </div>
                 </div>

@@ -91,6 +91,16 @@ def clean_photo_url(value):
     return f"https://res.cloudinary.com/gymzkxvk/{normalized_path.lstrip('/')}"
 
 
+def media_file_url(field, request=None):
+    if not field:
+        return None
+    name = getattr(field, "name", "")
+    if name.startswith(("http://", "https://")):
+        return clean_photo_url(name) if "res.cloudinary.com/" in name else name
+    url = field.url
+    return request.build_absolute_uri(url) if request else url
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -164,14 +174,7 @@ class CropScanSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_date"]
 
     def get_image(self, obj):
-        if not obj.image:
-            return None
-
-        image_value = getattr(obj.image, "name", None) or getattr(obj.image, "url", None) or str(obj.image)
-        if not image_value:
-            return None
-
-        return clean_photo_url(image_value)
+        return media_file_url(obj.image, self.context.get("request"))
 
     def get_image_url(self, obj):
         return self.get_image(obj)
@@ -199,8 +202,7 @@ class HealthAlertSerializer(serializers.ModelSerializer):
         if not obj.image:
             return None
 
-        image_value = getattr(obj.image, "name", None) or getattr(obj.image, "url", None) or str(obj.image)
-        return clean_photo_url(image_value)
+        return media_file_url(obj.image, self.context.get("request"))
 
     def get_distance_km(self, obj):
         # Calculé côté vue (haversine) et injecté dans le contexte ; 0 par défaut
@@ -230,6 +232,7 @@ class FertilizerCalculationSerializer(serializers.ModelSerializer):
 
 
 class ExpertSerializer(serializers.ModelSerializer):
+    is_demo = serializers.SerializerMethodField()
     phone_link = serializers.SerializerMethodField()
     sms_link = serializers.SerializerMethodField()
     whatsapp_link = serializers.SerializerMethodField()
@@ -240,7 +243,7 @@ class ExpertSerializer(serializers.ModelSerializer):
         fields = [
             "id", "name", "role", "specialty", "location",
             "phone_number", "whatsapp_number", "phone_link", "sms_link", "whatsapp_link",
-            "photo_url", "avatar_color", "online",
+            "photo_url", "avatar_color", "online", "is_demo",
         ]
 
     def to_representation(self, instance):
@@ -250,6 +253,9 @@ class ExpertSerializer(serializers.ModelSerializer):
             if isinstance(value, str):
                 representation[field_name] = normalize_text(value)
         return representation
+
+    def get_is_demo(self, obj):
+        return obj.id in {"plant_issouf", "plant_mariam", "vet_awa", "vet_yao"}
 
     def get_phone_link(self, obj):
         return f"tel:{obj.phone_number}" if obj.phone_number else None
@@ -268,8 +274,7 @@ class ExpertSerializer(serializers.ModelSerializer):
         if not obj.photo:
             return None
 
-        image_value = getattr(obj.photo, "name", None) or getattr(obj.photo, "url", None) or str(obj.photo)
-        return clean_photo_url(image_value)
+        return media_file_url(obj.photo, self.context.get("request"))
 
 
 class ExpertMessageSerializer(serializers.ModelSerializer):
@@ -288,5 +293,4 @@ class ExpertMessageSerializer(serializers.ModelSerializer):
         if not obj.image:
             return None
 
-        image_value = getattr(obj.image, "name", None) or getattr(obj.image, "url", None) or str(obj.image)
-        return clean_photo_url(image_value)
+        return media_file_url(obj.image, self.context.get("request"))

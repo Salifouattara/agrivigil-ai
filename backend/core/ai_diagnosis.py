@@ -1,22 +1,4 @@
-"""
-Moteur de diagnostic pour le Scan IA — appelle réellement Gemini pour
-analyser l'image de culture envoyée par l'agriculteur.
-
-Note sur le modèle : le projet visait initialement "Gemini 1.5 Flash", mais
-ce modèle (ainsi que toute la génération 1.5) a été définitivement arrêté par
-Google mi-2026 — tout appel vers lui renvoie une erreur 404. Ce module utilise
-donc **Gemini 2.5 Flash** (gemini-2.5-flash), le modèle Flash stable et
-disponible en production au moment de l'écriture, avec support multimodal
-(texte + image) et sortie JSON structurée. Si Google publie une version plus
-récente, il suffit de changer la constante MODEL_NAME ci-dessous.
-
-Si aucune clé GEMINI_API_KEY n'est configurée (ex: développement local sans
-compte Google AI Studio), le module bascule sur un moteur simulé basé sur une
-vraie base de maladies ivoiriennes, pour ne jamais bloquer le développement.
-Dès qu'une clé est présente, c'est TOUJOURS le vrai modèle qui est appelé —
-aucun repli silencieux en cas d'erreur réseau, pour que les problèmes soient
-visibles plutôt que masqués.
-"""
+"""Analyse de photos de cultures via Gemini. Une cle valide est requise ; aucun diagnostic simule n est produit."""
 
 import hashlib
 import json
@@ -24,6 +6,7 @@ import logging
 import random
 
 from django.conf import settings
+from .ai_service import AIUnavailableError, create_gemini_client, image_mime_type
 
 logger = logging.getLogger(__name__)
 
@@ -50,31 +33,38 @@ RESPONSE_SCHEMA = {
 }
 
 PROMPT = (
-    "Tu es un spécialiste vétérinaire et agronome pour les exploitations ivoiriennes. "
-    "Tu peux diagnostiquer des plantes (cacao, café, manioc, riz, maïs, igname, banane plantain, hévéa, palmier à huile, coton) "
-    "ou des animaux d'élevage (bovins, ovins, volailles). "
-    "⚠️ IMPORTANT: Si l'image n'est PAS une plante ou un animal d'élevage valide, réponds TOUJOURS avec is_valid_subject=false et les autres champs vides/valeur par défaut. "
-    "Analyse attentivement cette photo et fournis un diagnostic précis et pratique, utile à quelqu'un sur le terrain. "
-    "Si c'est bien une plante ou un animal valide: Si l'animal ou la plante paraît sain(e), dis-le clairement. Si tu détectes une maladie, une carence ou un ravageur, "
-    "identifie-le aussi précisément que possible, indique sa gravité, un remède concret disponible en Côte d'Ivoire, "
-    "un dosage précis si applicable, et des conseils de prévention. Réponds uniquement avec les champs demandés."
+    "Tu es un assistant d'observation agronomique et veterinaire. Analyse l'image jointe. "
+    "Tous les vegetaux agricoles sont des sujets valides, y compris les fruits recoltes, "
+    "les legumes, tomates, feuilles detachees, cabosses, racines et cultures maraicheres. "
+    "Les animaux d'elevage sont egalement valides. La liste des cultures n'est pas limitee. "
+    "Un fruit ou legume malade ou partiellement visible reste un sujet valide. "
+    "Utilise is_valid_subject=false uniquement si aucun vegetal ni animal d'elevage n'est "
+    "visible (objet, document, personne seule ou image trop floue). "
+    "Decris les signes visibles et propose une hypothese prudente, sans affirmer une "
+    "certitude clinique. N'invente pas de symptomes non visibles. Si le sujet parait sain, "
+    "renseigne is_healthy=true et disease_name vide. Si des lesions sont visibles, "
+    "renseigne is_healthy=false et indique leur cause possible avec des mesures "
+    "de prevention. Pour tout traitement, demander confirmation a un professionnel ; "
+    "ne pas inventer de dose sans connaitre le produit, sa concentration et le sujet. "
+    "Reponds en francais avec tous les champs demandes."
 )
+
 
 
 def _diagnose_with_gemini(image_bytes: bytes, declared_crop: str | None) -> dict:
     from google import genai
     from google.genai import types
 
-    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    client = create_gemini_client()
 
     prompt = PROMPT
     if declared_crop:
         prompt += f" L'agriculteur indique qu'il s'agit de : {declared_crop}."
 
     response = client.models.generate_content(
-        model=MODEL_NAME,
+        model=settings.GEMINI_MODEL,
         contents=[
-            types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
+            types.Part.from_bytes(data=image_bytes, mime_type=image_mime_type(image_bytes)),
             prompt,
         ],
         config=types.GenerateContentConfig(
@@ -96,18 +86,12 @@ def diagnose_crop_image(image_bytes: bytes, declared_crop: str | None = None) ->
     Diagnostique une image de culture.
 
     Utilise Gemini 2.5 Flash si `settings.GEMINI_API_KEY` est configurée.
-    Sinon, bascule sur le moteur simulé (voir `_diagnose_simulated`) — utile
-    uniquement pour développer sans clé API, jamais utilisé silencieusement
-    en production si une clé est présente.
+    Sans cle valide, le service est indisponible : aucun diagnostic simule.
     """
     if settings.GEMINI_API_KEY:
         return _diagnose_with_gemini(image_bytes, declared_crop)
 
-    logger.warning(
-        "GEMINI_API_KEY non configurée : utilisation du moteur de diagnostic simulé. "
-        "Ajoutez votre clé dans le fichier .env pour activer le vrai diagnostic IA."
-    )
-    return _diagnose_simulated(image_bytes, declared_crop)
+    raise AIUnavailableError("Le diagnostic IA n'est pas encore configuré. Aucun diagnostic n'a été généré.")
 
 # Base de connaissances agronomiques : maladies réelles des cultures
 # ivoiriennes les plus courantes, avec remèdes et dosages usuels.

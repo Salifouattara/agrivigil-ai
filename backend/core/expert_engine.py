@@ -1,14 +1,10 @@
-"""
-Génère une réponse d'expert (agronome/vétérinaire) dans le Hub Experts.
-
-Utilise Gemini 2.5 Flash si GEMINI_API_KEY est configurée, sinon bascule
-sur des réponses simulées pour le développement local.
-"""
+"""Reponses IA des assistants agronomiques via Gemini, sans repli vers des reponses aleatoires."""
 
 import logging
 import random
 
 from django.conf import settings
+from .ai_service import create_gemini_client
 
 logger = logging.getLogger(__name__)
 
@@ -71,11 +67,11 @@ def _reply_with_gemini(expert, question: str, history: list[dict]) -> str:
     from google import genai
     from google.genai import types
 
-    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    client = create_gemini_client()
     prompt = _build_prompt(expert, question, history)
 
     response = client.models.generate_content(
-        model=MODEL_NAME,
+        model=settings.GEMINI_MODEL,
         contents=[prompt],
         config=types.GenerateContentConfig(temperature=0.4),
     )
@@ -121,54 +117,8 @@ class ChatbotPersona:
 
 
 def generate_chatbot_reply(question: str, history: list[dict] | None = None) -> str:
-    """
-    Génère une réponse de chatbot généraliste pour le Hub Experts.
-
-    Doit impérativement utiliser Gemini. Si l'utilisateur n'a pas configuré la clé
-    ou que le quota est dépassé, renvoie un message indiquant le manque de crédit.
-    """
-    history = history or []
-    logger.info("Génération réponse chatbot pour question générale")
-    chatbot = ChatbotPersona()
-
-    if not settings.GEMINI_API_KEY:
-        return (
-            "Désolé, vous ne disposez pas de crédits suffisants pour utiliser le chatbot. "
-            "Veuillez configurer votre clé API dans le fichier .env."
-        )
-
-    try:
-        return _reply_with_gemini(chatbot, question, history)
-    except Exception as exc:
-        logger.warning("Échec de l'appel Gemini pour le chatbot : %s", exc)
-        return (
-            "Désolé, vous ne disposez plus d'assez de crédit pour obtenir une réponse du chatbot. "
-            "Veuillez vérifier votre solde ou réessayer plus tard."
-        )
+    return _reply_with_gemini(ChatbotPersona(), question, history or [])
 
 
 def generate_expert_reply(expert, question: str, history: list[dict] | None = None) -> str:
-    """
-    Génère la réponse d'un expert pour une question d'agriculteur.
-
-    Utilise Gemini 2.5 Flash si GEMINI_API_KEY est configurée.
-    Sinon, bascule sur le moteur simulé pour le développement local.
-    """
-    history = history or []
-
-    if settings.GEMINI_API_KEY:
-        try:
-            logger.info("Génération réponse expert via Gemini pour %s", expert.id)
-            return _reply_with_gemini(expert, question, history)
-        except Exception as exc:
-            if _is_quota_error(exc):
-                logger.warning("Quota Gemini épuisé pour la réponse expert %s : %s", expert.id, exc)
-                return _reply_quota_exhausted()
-            logger.warning("Fallback vers réponse simulée de l'expert après erreur Gemini : %s", exc)
-            return _reply_simulated(expert, question)
-
-    logger.warning(
-        "GEMINI_API_KEY non configurée : utilisation du moteur expert simulé. "
-        "Ajoutez votre clé dans le fichier .env pour activer les vraies réponses IA."
-    )
-    return _reply_simulated(expert, question)
+    return _reply_with_gemini(expert, question, history or [])

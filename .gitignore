@@ -1,7 +1,13 @@
 .env
+.env.*
+!.env.example
+.local/
+.venv/
 db.sqlite3
 *.pyc
 __pycache__/
 node_modules/
 dist/
 .DS_Store
+
+/backend/media/scans/

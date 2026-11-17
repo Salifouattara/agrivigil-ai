@@ -28,27 +28,28 @@ export default function Login() {
     }
   };
 
-  const handleGoogle = () => {
-    db.auth.loginWithProvider('google', '/');
-  };
 
   return (
-    <div className="min-h-screen hero-gradient flex flex-col items-center justify-center px-6 py-10">
-      <div className="w-full max-w-sm surface-card rounded-[32px] p-7">
+    <div className="av-login">
+      <section className="av-login-story"><div className="av-login-wordmark"><Leaf size={28} /> AgriVigil AI</div><div><p className="av-login-eyebrow">L’AGRICULTURE, MIEUX ACCOMPAGNÉE</p><h2>Le bon regard.<br />Au bon moment.</h2><p className="av-login-description">Observez vos cultures, suivez leur santé et préparez vos interventions avec l’aide de l’intelligence artificielle.</p><div className="av-login-tools"><span>01 · Diagnostic photo</span><span>02 · Suivi des cultures</span><span>03 · Météo agricole</span></div></div><p className="av-login-footnote">Pensé pour les agriculteurs de Côte d’Ivoire.</p></section>
+      <div className="av-login-form-area">
+      <div className="av-login-card w-full max-w-md p-7">
         <div className="flex flex-col items-center mb-7">
           <div className="w-16 h-16 rounded-3xl bg-[#12523A] flex items-center justify-center mb-3 shadow-[0_10px_24px_-8px_rgba(18,82,58,0.55)]">
             <Leaf className="w-8 h-8 text-[#9CF7C4]" />
           </div>
-          <h1 className="font-heading text-3xl font-extrabold text-[#10221A]">AgrivigilAI</h1>
-          <p className="text-sm text-[#8A9A91] font-body">Diagnostic intelligent des cultures & animaux</p>
+          <h1 className="font-heading text-3xl font-extrabold text-[#10221A]">Bienvenue</h1>
+          <p className="text-sm text-[#8A9A91] font-body">Connectez-vous à votre espace agricole</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-1.5">
-            <Label className="text-sm font-body font-medium text-[#10221A]">Email</Label>
+            <Label htmlFor="login-email" className="text-sm font-body font-medium text-[#10221A]">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A9A91]" />
               <Input
+                id="login-email"
+                autoComplete="username"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -60,10 +61,12 @@ export default function Login() {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-sm font-body font-medium text-[#10221A]">Mot de passe</Label>
+            <Label htmlFor="login-password" className="text-sm font-body font-medium text-[#10221A]">Mot de passe</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A9A91]" />
               <Input
+                id="login-password"
+                autoComplete="current-password"
                 type={showPw ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -71,7 +74,7 @@ export default function Login() {
                 required
                 className="h-12 pl-10 pr-10 rounded-2xl border-[#DCE7E0] text-base"
               />
-              <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A9A91]">
+              <button type="button" aria-label={showPw ? "Masquer le mot de passe" : "Afficher le mot de passe"} onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A9A91]">
                 {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
@@ -88,20 +91,8 @@ export default function Login() {
           </Button>
         </form>
 
-        <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-px bg-[#DCE7E0]" />
-          <span className="text-xs text-[#8A9A91] font-body">ou</span>
-          <div className="flex-1 h-px bg-[#DCE7E0]" />
-        </div>
-
-        <Button
-          variant="outline"
-          onClick={handleGoogle}
-          className="w-full h-12 rounded-2xl border-[#DCE7E0] text-[#10221A] font-body"
-        >
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 mr-2" alt="" />
-          Continuer avec Google
-        </Button>
+        <button type="button" onClick={() => { setEmail('demo@monapp.com'); setPassword('Demo1234'); setError(''); }} className="w-full rounded-2xl border border-[#dce7e0] bg-[#f4f7ef] px-4 py-4 mt-4 text-sm font-semibold text-[#12523A]">Découvrir avec le compte de démonstration</button>
+        <p className="text-xs leading-relaxed text-center text-[#7c8a7e] mt-2">Les identifiants seront préremplis. Cliquez ensuite sur Se connecter.</p>
 
         <div className="mt-6 text-center space-y-2">
           <Link to="/forgot-password" className="text-sm text-[#B4740E] font-body hover:underline">
@@ -112,6 +103,7 @@ export default function Login() {
             <Link to="/register" className="text-[#12523A] font-semibold hover:underline">Créer un compte</Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

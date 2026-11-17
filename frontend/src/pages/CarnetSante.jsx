@@ -71,7 +71,7 @@ export default function CarnetSante() {
 
   const selectedTracking = trackings.find(t => t.id === selectedTrackingId);
   const trackingScans = filteredScans.filter(s => s.tracking_id === selectedTrackingId);
-  const trackingScansWithPhotos = trackingScans.filter(s => s.image_url).sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+  const trackingScansWithPhotos = trackingScans.filter(s => s.image_url).sort((a, b) => new Date(a.created_date).getTime() - new Date(b.created_date).getTime());
 
   const first = trackingScansWithPhotos[0];
   const latest = trackingScansWithPhotos[trackingScansWithPhotos.length - 1];
@@ -95,8 +95,8 @@ export default function CarnetSante() {
   }
 
   return (
-    <div className="pb-6">
-      <div className="hero-gradient px-5 pt-6 pb-8 rounded-b-[36px]">
+    <div className="av-page page-carnetsante pb-6">
+      <div className="av-page-header hero-gradient px-5 pt-6 pb-8 rounded-b-[36px]">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/15 text-[#7CF2B8]">
             <BookHeart className="w-4 h-4" strokeWidth={2.2} />

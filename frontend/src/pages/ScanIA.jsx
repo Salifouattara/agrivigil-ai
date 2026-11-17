@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
-  Camera, Loader2, Leaf, AlertTriangle, Bell, ShieldCheck,
+  Loader2, Leaf, AlertTriangle, Bell, ShieldCheck,
   ClipboardCheck, ShieldAlert, CloudSun, TrendingDown, TrendingUp, Minus, Sprout, PawPrint,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,7 @@ export default function ScanIA() {
       // Calculer l'évolution dynamique du dernier suivi mis à jour
       const scansWithTracking = scans.filter(s => s.tracking_id);
       if (scansWithTracking.length > 0) {
-        const sorted = [...scansWithTracking].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+        const sorted = [...scansWithTracking].sort((a, b) => new Date(a.created_date).getTime() - new Date(b.created_date).getTime());
         const latestScan = sorted[sorted.length - 1];
         const latestTrackingId = latestScan.tracking_id;
         const trackingScans = sorted.filter(s => s.tracking_id === latestTrackingId);
@@ -152,11 +152,11 @@ export default function ScanIA() {
   const speechText = result ? `Culture: ${result.crop_name}. ${result.is_healthy ? 'La plante est saine.' : `Maladie détectée: ${result.disease_name}. Gravité: ${result.severity}. Remède: ${result.remedy}. Dosage: ${result.dosage}.`}` : '';
 
   return (
-    <div className="pb-6">
+    <div className="av-page page-scania pb-6">
       {/* ------------------------------------------------------------- */}
       {/* Hero — en-tête vert émeraude + carte de scan animée            */}
       {/* ------------------------------------------------------------- */}
-      <div className="hero-gradient px-5 pt-6 pb-8 rounded-b-[36px]">
+      <div className="av-page-header hero-gradient px-5 pt-6 pb-8 rounded-b-[36px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/15 text-[#7CF2B8]">
@@ -192,7 +192,7 @@ export default function ScanIA() {
         {/* Carte de scan avec animation */}
         <div
           onClick={() => fileRef.current?.click()}
-          className="scan-frame mt-4 aspect-[4/3] cursor-pointer"
+          className="scan-frame mt-4 aspect-[4/3] cursor-pointer" role="button" tabIndex={0} aria-label="Choisir une photo à analyser" onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); fileRef.current?.click(); } }}
         >
           <span className="corner tl" /><span className="corner tr" /><span className="corner bl" /><span className="corner br" />
           {image ? (
@@ -205,7 +205,7 @@ export default function ScanIA() {
                   ? <Sprout className="w-8 h-8 text-[#9CF7C4]" strokeWidth={1.5} />
                   : <PawPrint className="w-8 h-8 text-[#9CF7C4]" strokeWidth={1.5} />}
               </div>
-              <p className="text-[13px] font-medium text-white/85">Touchez pour prendre une photo</p>
+              <p className="text-[13px] font-medium text-white/85">Choisir une photo</p>
             </div>
           )}
           {(loading || !image) && (
@@ -302,7 +302,7 @@ export default function ScanIA() {
       {/* ------------------------------------------------------------- */}
       {/* Corps — alerte de proximité + résumé météo/évolution           */}
       {/* ------------------------------------------------------------- */}
-      <div className="px-4 -mt-3 space-y-3 relative z-10">
+      <div className="av-scan-dashboard px-4 -mt-3 space-y-3 relative z-10">
         {topAlert && (
           <button
             onClick={() => navigate('/communaute')}

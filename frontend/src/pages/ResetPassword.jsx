@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 export default function ResetPassword() {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
+  const [email, setEmail] = useState(urlParams.get('email') || '');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +22,7 @@ export default function ResetPassword() {
     setError('');
     setLoading(true);
     try {
-      await db.auth.resetPassword({ resetToken: token, newPassword: password });
+      await db.auth.resetPassword({ resetToken: token, newPassword: password, email });
       window.location.href = '/login';
     } catch (err) {
       setError(err.message || 'Erreur lors de la réinitialisation');
@@ -40,6 +41,10 @@ export default function ResetPassword() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="reset-email">Email du compte</Label>
+            <Input id="reset-email" type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" className="h-12 rounded-2xl" />
+          </div>
           <div className="space-y-1.5">
             <Label className="text-sm font-body font-medium text-[#10221A]">Nouveau mot de passe</Label>
             <div className="relative">

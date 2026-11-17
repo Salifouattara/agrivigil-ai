@@ -1,6 +1,6 @@
 import { db } from '@/api/apiClient';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { CloudSun, Droplets, Wind, Thermometer, Sun, CloudRain, Loader2, MapPin, Calendar, Leaf, AlertTriangle } from 'lucide-react';
 import WaxDivider from '@/components/ui/WaxDivider';
@@ -75,6 +75,8 @@ function getCurrentSeason() {
 export default function Meteo() {
   const [city, setCity] = useState(IVORIAN_CITIES[0]);
   const [weather, setWeather] = useState(null);
+  const [error, setError] = useState('');
+  const requestId = useRef(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,14 +84,19 @@ export default function Meteo() {
   }, [city]);
 
   const fetchWeather = async (selectedCity) => {
+    const id = ++requestId.current;
     setLoading(true);
+    setError('');
     try {
       const result = await db.integrations.Core.GetWeather(selectedCity.name);
-      setWeather(result);
+      if (id === requestId.current) setWeather(result);
     } catch (err) {
-      setWeather(null);
+      if (id === requestId.current) {
+        setWeather(null);
+        setError(err.message || 'La meteo est indisponible pour le moment.');
+      }
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoading(false);
     }
   };
 
@@ -108,8 +115,8 @@ export default function Meteo() {
     : '';
 
   return (
-    <div className="pb-6">
-      <div className="hero-gradient px-5 pt-6 pb-7 rounded-b-[36px]">
+    <div className="av-page page-meteo pb-6">
+      <div className="av-page-header hero-gradient px-5 pt-6 pb-7 rounded-b-[36px]">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/15 text-[#7CF2B8]">
             <CloudSun className="w-4 h-4" strokeWidth={2.2} />
@@ -139,12 +146,16 @@ export default function Meteo() {
         ))}
       </div>
 
+      {error && <div role="alert" className="card-soft rounded-2xl p-5 mb-4">
+        <p className="text-sm text-red-700">{error}</p>
+        <button className="mt-3 text-sm font-semibold text-[#12523A] underline" onClick={() => fetchWeather(city)}>Réessayer</button>
+      </div>}
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-6 h-6 text-[#12523A] animate-spin" />
         </div>
       ) : weather && (
-        <>
+        <div className="av-weather-grid">
           {/* Current weather */}
           <div className="card-soft rounded-3xl p-5 mb-4">
             <div className="flex items-start justify-between mb-4">
@@ -161,10 +172,11 @@ export default function Meteo() {
             <div className="grid grid-cols-3 gap-3">
               <MiniStat icon={Droplets} label="Humidité" value={`${weather.humidity}%`} />
               <MiniStat icon={Wind} label="Vent" value={`${weather.wind_speed} km/h`} />
-              <MiniStat icon={CloudRain} label="Pluie" value={`${weather.rain_probability}%`} />
+              <MiniStat icon={CloudRain} label="Pluie" value={weather.rain_probability === null ? '—' : `${weather.rain_probability}%`} />
             </div>
           </div>
 
+          <p className="av-weather-source text-xs text-[#8A9A91] mb-4">Source : {weather.source} · Données actualisées {weather.observed_at ? new Date(weather.observed_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}</p>
           {/* Alerts based on weather */}
           {getWeatherAlerts(weather).length > 0 && (
             <div className="mb-4">
@@ -241,7 +253,7 @@ export default function Meteo() {
             </div>
             <p className="text-sm text-[#10221A] font-body leading-relaxed">{season.advice}</p>
           </div>
-        </>
+        </div>
       )}
       </div>
     </div>

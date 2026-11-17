@@ -1,3 +1,5 @@
+from .ai_service import read_uploaded_image, public_ai_error
+from django.db import connection
 import logging
 import random
 from datetime import date, timedelta
@@ -290,28 +292,14 @@ class AnalyzeCropScanView(APIView):
 
         declared_crop = request.data.get("crop_name")
         subject_type = request.data.get("subject_type")  # 'plante' ou 'animal' en frontal
-        image_bytes = image.read()
+        image_bytes = read_uploaded_image(image)
         image.seek(0)
         try:
             # Transmettre la valeur déclarée (culture ou type d'animal) au moteur.
             diagnosis = diagnose_crop_image(image_bytes, declared_crop)
         except Exception as exc:
-            exc_text = str(exc)
-            if "RESOURCE_EXHAUSTED" in exc_text or "quota" in exc_text.lower() or "429" in exc_text:
-                return Response(
-                    {
-                        "detail": (
-                            "Vous n'avez actuellement plus de quota disponible. Le diagnostic IA ne peut pas être lancé pour l'instant. "
-                            "Réessaie plus tard."
-                        )
-                    },
-                    status=status.HTTP_502_BAD_GATEWAY,
-                )
-
-            return Response(
-                {"detail": "Le diagnostic IA a échoué. Vérifie ta configuration API ou réessaie plus tard."},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
+            detail, error_status = public_ai_error(exc)
+            return Response({"detail": detail}, status=error_status)
 
         # Valider que l'image contient bien une plante ou un animal reconnus
         if not diagnosis.get("is_valid_subject", False):
@@ -476,14 +464,12 @@ class AnalyzeSoilView(APIView):
         if not image:
             return Response({"detail": "Image requise."}, status=status.HTTP_400_BAD_REQUEST)
 
-        image_bytes = image.read()
+        image_bytes = read_uploaded_image(image)
         try:
             result = analyze_soil_image(image_bytes)
         except Exception as exc:
-            return Response(
-                {"detail": f"L'analyse du sol a échoué : {exc}"},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
+            detail, error_status = public_ai_error(exc)
+            return Response({"detail": detail}, status=error_status)
         return Response(result)
 
 
@@ -573,11 +559,8 @@ class ExpertMessageListCreateView(generics.ListCreateAPIView):
                     content=reply_text,
                 )
         except Exception as exc:
-            logger.exception("Échec génération réponse expert pour %s", conversation_id)
-            return Response(
-                {"detail": f"La réponse de l'expert a échoué : {exc}"},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
+            detail, error_status = public_ai_error(exc)
+            return Response({"detail": detail}, status=error_status)
 
         context = {"request": request}
         return Response(
@@ -606,6 +589,22 @@ class WeatherView(APIView):
             return Response(get_weather(city, date.today()))
         except WeatherAPIError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+
+class HealthView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        from django.conf import settings
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        return Response({
+            "service": "agrivigil", "status": "ok",
+            "gemini_configured": bool(settings.GEMINI_API_KEY),
+            "weather_configured": bool(settings.OPENWEATHER_API_KEY),
+        })
 
 
 class CityListView(APIView):

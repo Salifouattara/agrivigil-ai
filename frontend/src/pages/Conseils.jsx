@@ -34,8 +34,8 @@ export default function Conseils() {
     : '';
 
   return (
-    <div className="pb-6">
-      <div className="hero-gradient px-5 pt-6 pb-7 rounded-b-[36px]">
+    <div className="av-page page-conseils pb-6">
+      <div className="av-page-header hero-gradient px-5 pt-6 pb-7 rounded-b-[36px]">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/15 text-[#7CF2B8]">
             <BookOpen className="w-4 h-4" strokeWidth={2.2} />

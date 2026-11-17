@@ -1,148 +1,112 @@
-# AgriVigil AI — MVP fonctionnel (Vibeathon 2026)
+# AgriVigil AI
 
-Ce paquet contient une version **fonctionnelle et autonome** de l'application,
-reconstruite à partir de l'export Base44 (`agri-vigil-smart`) :
+Application React/Vite et API Django REST pour le diagnostic visuel, le carnet de suivi, les alertes communautaires, les conseils, la météo et le calcul d'engrais.
 
-```
-agrivigil-ai/
-├── frontend/    → React + Vite + Tailwind (l'interface exportée de Base44, adaptée)
-└── backend/     → Django REST Framework (nouveau, à connecter au frontend)
-```
+## Démonstration locale sur Windows
 
-## Ce qui a changé par rapport à l'export Base44
+Depuis ce dossier, dans PowerShell :
 
-- Le SDK propriétaire `@base44/sdk` a été retiré. Le frontend utilise
-  maintenant `frontend/src/api/apiClient.js`, un client REST classique qui
-  parle à `backend/`.
-- L'authentification (`AuthContext.jsx`) a été réécrite : la version exportée
-  appelait une fonction (`createAxiosClient`) qui n'existait nulle part dans
-  le code — elle n'aurait jamais fonctionné en dehors de Base44.
-- Le Scan IA appelle **réellement Gemini 2.5 Flash** pour analyser l'image
-  envoyée (voir `backend/core/ai_diagnosis.py`). ⚠️ Le projet visait
-  initialement "Gemini 1.5 Flash", mais Google a définitivement arrêté toute
-  la génération 1.5 mi-2026 (erreur 404 systématique) — j'ai donc basculé sur
-  **Gemini 2.5 Flash**, le modèle Flash stable actuellement en production.
-- La météo appelle **réellement OpenWeatherMap** (voir `backend/core/weather.py`).
-
-Les deux nécessitent une clé API (voir section suivante). Sans clé, le
-diagnostic IA bascule automatiquement sur un moteur simulé (pratique pour
-développer sans compte Google), et la météo renvoie une erreur claire plutôt
-que d'inventer des données.
-
-## Clés API à configurer
-
-Dans `backend/.env` (copié depuis `.env.example`) :
-
-```
-GEMINI_API_KEY=ta_cle_gemini
-OPENWEATHER_API_KEY=ta_cle_openweathermap
+```powershell
+.\Start-AgriVigil.ps1
 ```
 
-- **Gemini** : crée une clé gratuite sur https://aistudio.google.com/apikey
-  (compte Google requis, activation immédiate).
-- **OpenWeatherMap** : crée un compte gratuit sur
-  https://openweathermap.org/api → onglet "API keys". ⚠️ La clé met
-  généralement **jusqu'à 2 heures** à s'activer après la création du compte —
-  ne t'inquiète pas si tu as une erreur 401 juste après l'inscription.
+- Application : http://127.0.0.1:5173/
+- État du backend : http://127.0.0.1:5185/api/health/
+- Compte de démonstration : `demo@monapp.com`, avec le mot de passe fourni par le propriétaire.
+- Arrêt : `.\Stop-AgriVigil.ps1` ; puis relancer après modification de `backend/.env`.
+- Les processus démarrent en arrière-plan. Les journaux sont dans `.local/`.
+- La base `backend/db.sqlite3` et les photos restent sur cet ordinateur.
+- Une connexion Internet est nécessaire pour Gemini et OpenWeatherMap, même en local.
 
+Le lanceur vérifie les ports pour éviter d'interférer avec une autre application. Il exécute les migrations et vérifie la disponibilité des deux serveurs. Il utilise les installations Python et Node présentes sur la machine et les dépendances déjà installées.
 
-## Démarrage rapide
+## Configuration
 
-### Lancement officiel pour le jury (une seule commande)
+Les secrets se trouvent uniquement dans `backend/.env`, exclu de Git. Le modèle de fichier est `backend/.env.example`.
 
-Prérequis : Docker Desktop installé et lancé.
+Variables utiles :
 
-1. Copier le fichier d’environnement de base :
+- `DJANGO_SECRET_KEY` : secret Django aléatoire.
+- `GEMINI_API_KEY` : clé Gemini.
+- `GEMINI_MODEL` : modèle à utiliser, `gemini-2.5-flash` par défaut.
+- `OPENWEATHER_API_KEY` : clé météo.
+- `DATABASE_URL` : facultatif ; SQLite local par défaut, PostgreSQL possible en ligne.
+- `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS` : hôtes et origines autorisés.
+- `DJANGO_DEBUG=True` pour le développement local uniquement.
 
-```bash
-copy .env.example .env
-```
+Le frontend utilise `http://127.0.0.1:5185` en développement. `VITE_API_BASE_URL` permet de choisir une autre API. Les clés Gemini et météo ne doivent jamais être placées dans une variable `VITE_`.
 
-Sur Linux/macOS, remplacer par :
+Sans clé Gemini, l'application indique que l'analyse est indisponible. Les parcours de diagnostic, d'analyse du sol et de conversation ne génèrent plus de résultats simulés. Les conseils du référentiel restent consultables si leur enrichissement IA échoue. La météo conserve ses résultats dix minutes pour limiter les appels.
 
-```bash
-cp .env.example .env
-```
+## Vérifications
 
-2. Lancer l’application depuis la racine du projet :
+Backend :
 
-```bash
-docker compose up --build
-```
-
-Une fois démarré :
-- Frontend : http://localhost:5173/
-- Backend API : http://localhost:8000/api/
-
-> La commande ci-dessus démarre automatiquement le backend Django et le frontend Vite avec la configuration adaptée au projet.
-
-### Lancement manuel (si Docker n’est pas disponible)
-
-#### 1. Backend (Django)
-
-```bash
+```powershell
 cd backend
-python3 -m venv venv && source venv/bin/activate   # ou .\venv\Scripts\activate sous Windows
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py seed_experts       # crée les 4 experts du Hub Experts
-python manage.py createsuperuser    # optionnel, pour /admin/
-python manage.py runserver
+python manage.py check
+python manage.py test core.tests --noinput
 ```
 
-L'API tourne sur http://localhost:8000/api/.
+Frontend :
 
-#### 2. Frontend (React/Vite)
-
-```bash
+```powershell
 cd frontend
-npm install
-npm run dev
+npm run build
+npm run lint
+npm run typecheck
 ```
 
-L'appli tourne sur http://localhost:5173/.
+Test réel du compte local, serveurs démarrés :
 
-## Endpoints REST disponibles
+```powershell
+cd backend
+python smoke_local.py
+```
 
-| Méthode | Endpoint                          | Description                                  |
-|---------|------------------------------------|-----------------------------------------------|
-| POST    | `/api/auth/register/`              | Inscription (déclenche un code OTP)          |
-| POST    | `/api/auth/verify-otp/`            | Valide le code, retourne les tokens JWT      |
-| POST    | `/api/auth/resend-otp/`            | Renvoie un code                              |
-| POST    | `/api/auth/login/`                 | Connexion email/mot de passe                 |
-| POST    | `/api/auth/token/refresh/`         | Rafraîchit le token d'accès                  |
-| GET     | `/api/auth/me/`                    | Profil de l'utilisateur connecté             |
-| POST    | `/api/auth/logout/`                | Déconnexion                                   |
-| POST    | `/api/auth/forgot-password/`       | Demande de réinitialisation                  |
-| POST    | `/api/auth/reset-password/`        | Réinitialisation du mot de passe             |
-| GET/POST| `/api/scans/`                      | Historique des scans / créer un scan brut    |
-| POST    | `/api/scans/analyze/`              | Envoie une image → diagnostic IA complet     |
-| GET/POST| `/api/alerts/`                     | Alertes sanitaires communautaires            |
-| GET/POST| `/api/calculator/`                 | Historique / calcul d'engrais NPK            |
-| GET     | `/api/experts/`                    | Annuaire des experts (Hub Experts)            |
-| GET/POST| `/api/experts/messages/`           | Messagerie experts (réponse simulée auto)     |
-| GET     | `/api/weather/?city=Abidjan`       | Météo agricole du jour                        |
-| GET     | `/api/weather/cities/`             | Liste des villes ivoiriennes disponibles      |
+Ce test demande le mot de passe du compte de démonstration et effectue de vrais appels aux services. Il conserve un scan, un suivi, un calcul d'engrais et une conversation dans le compte local. Il vérifie aussi la lecture de la photo sauvegardée et le renouvellement des sessions. Ne pas utiliser ce script sur une API de production.
 
-**Note sur le "temps réel"** : conformément à ta demande d'endpoints REST
-propres pour le MVP, il n'y a pas de WebSocket. Les composants qui
-affichaient un flux en direct (alertes communautaires, chat experts) font
-un **polling léger** (toutes les 6 secondes) côté frontend — voir la méthode
-`subscribe()` dans `apiClient.js`. C'est transparent pour l'utilisateur et
-largement suffisant pour un MVP de hackathon ; tu pourras migrer vers Django
-Channels plus tard sans changer l'interface des composants.
+## Parcours de présentation
 
-## Limitations connues du MVP
+1. Se connecter au compte démo.
+2. Consulter le scan de cacao et le carnet de suivi, puis charger une autre photo.
+3. Montrer les signalements et leurs détails dans Communauté.
+4. Comparer la météo de plusieurs villes et les prévisions à trois jours.
+5. Calculer les besoins NPK d'une parcelle.
+6. Consulter les conseils par culture et poser une question au chatbot.
 
-- Base de données SQLite (suffisant pour la démo ; passer à PostgreSQL/PostGIS
-  est prévu dans `settings.py`, commenté et prêt à activer).
-- Pas d'envoi réel d'email/SMS pour les codes OTP : ils sont affichés dans la
-  console du serveur Django (`[OTP DEMO] ...`). Pratique pour tester sans
-  configurer Africa's Talking dans l'immédiat.
-- La connexion Google (bouton présent dans l'UI) n'est pas branchée — elle
-  affiche un message clair plutôt que de planter.
-- Le diagnostic IA (Gemini) et la météo (OpenWeatherMap) nécessitent tes
-  propres clés API — voir la section ci-dessus. Sans clé Gemini, le scan
-  fonctionne quand même via un moteur de secours simulé ; sans clé
-  OpenWeatherMap, l'écran météo renverra une erreur explicite tant que la
-  clé n'est pas configurée.
+Les diagnostics visuels et calculs servent d'aide à la décision ; ils ne remplacent pas une analyse de laboratoire ou l'avis d'un professionnel de terrain.
+
+## Docker et hébergement
+
+`docker compose up --build` charge également `backend/.env` et expose les mêmes ports locaux. Ne pas lancer Docker et le lanceur Windows simultanément. Le parcours Docker n'a pas été revalidé pendant la préparation locale.
+
+Les modifications de cette préparation sont locales. Le site Vercel et le service Railway ne sont pas redéployés par les scripts. Pour un hébergement Django distinct, configurer l'URL de l'API, CORS, les secrets, une base persistante et le stockage des médias avant de publier.
+
+## Limites actuelles
+
+L'envoi de mails/SMS, la connexion Google et la synthèse vocale Dioula ne sont pas configurés pour la démonstration. Utiliser le compte démo existant. La lecture vocale française dépend du navigateur et des voix installées. Le contrôle visuel automatisé du navigateur a été indisponible pendant cette intervention ; les validations réalisées portent sur le code, la compilation et les appels API réels.
+
+
+## Version de présentation — novembre 2026
+
+- Interface adaptative : navigation latérale sur ordinateur, barre basse sur mobile ; plus de cadre de téléphone sur grand écran.
+- Connexion de démonstration préremplissable ; chargement des pages à la demande.
+- Hub Experts : portraits locaux réparés, avatar de secours et profils d’exemple signalés comme tels. Leurs contacts restent désactivés tant que les professionnels ne sont pas validés.
+- Communauté : signalements de l’API, sans fausse épidémie ni foyers inventés.
+
+### PythonAnywhere gratuit
+
+La release est générée par `python deploy/build_release.py`. Elle exclut les secrets, bases de données et photos de scans. Le script `deploy/setup_pythonanywhere.py` installe les dépendances ciblées, conserve une sauvegarde de la base, applique les migrations et collecte les fichiers statiques. L’ancienne installation `/home/Salif/agrivigil-ai` est préservée ; la nouvelle release est dans `/home/Salif/agrivigil-release-20261117`.
+
+Configuration Web prévue : Python 3.13, virtualenv `/home/Salif/agrivigil-release-20261117/.venv`, WSGI fourni dans `deploy/pythonanywhere_wsgi.py`, mappings `/static/` vers `backend/staticfiles` et `/media/` vers `backend/media`. Le fichier `backend/.env` distant contient les secrets, `DJANGO_DEBUG=False`, les hôtes autorisés et l’origine Vercel. Aucune clé Gemini ou météo ne doit se trouver dans les variables `VITE_*`.
+
+L’offre gratuite comporte un seul worker, 512 MiB de stockage, des accès réseau sortants limités et une expiration du site à renouveler manuellement. Elle convient à une démonstration à faible charge, avec la version locale comme solution de repli. Documentation : https://help.pythonanywhere.com/pages/FreeAccountsFeatures/
+
+### À compléter avant un usage public durable
+
+- Valider les profils et partenariats du Hub Experts.
+- Brancher un fournisseur d’e-mails pour les codes d’inscription et de récupération ; la connexion Google reste à intégrer et son bouton n’est plus affiché.
+- Valider les recommandations agricoles sur le terrain et organiser la modération des signalements.
+- Automatiser les sauvegardes et définir les quotas d’utilisation de l’IA.
+- Tester et compléter les langues locales et la synthèse vocale sur les appareils visés.

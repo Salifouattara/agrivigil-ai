@@ -16,6 +16,8 @@ repli silencieux vers des données inventées.
 """
 
 import requests
+from datetime import datetime, timezone
+from django.core.cache import cache
 from django.conf import settings
 
 IVORIAN_CITIES = {
@@ -53,7 +55,7 @@ def _condition_from_owm(weather_main: str, pop: float) -> str:
 
 
 def _advice_for(temp, humidity, rain_probability):
-    if rain_probability >= 60:
+    if rain_probability is not None and rain_probability >= 60:
         return "Reportez les traitements phytosanitaires : la pluie attendue les rendrait inefficaces."
     if temp >= 32:
         return "Fortes chaleurs : arrosez tôt le matin et évitez les travaux aux champs entre 11h et 16h."
@@ -62,7 +64,7 @@ def _advice_for(temp, humidity, rain_probability):
     return "Conditions favorables aux travaux champêtres et à la fertilisation."
 
 
-def get_weather(city_name: str, when=None) -> dict:
+def _get_weather(city_name: str, when=None) -> dict:
     api_key = settings.OPENWEATHER_API_KEY
     if not api_key:
         raise WeatherAPIError(
@@ -78,7 +80,7 @@ def get_weather(city_name: str, when=None) -> dict:
         timeout=10,
     )
     if current_resp.status_code != 200:
-        raise WeatherAPIError(f"OpenWeatherMap a renvoyé une erreur ({current_resp.status_code}) : {current_resp.text[:200]}")
+        raise WeatherAPIError(f"Le service météo est indisponible (code {current_resp.status_code}).")
     current = current_resp.json()
 
     forecast_resp = requests.get(
@@ -89,9 +91,9 @@ def get_weather(city_name: str, when=None) -> dict:
     forecast_data = forecast_resp.json() if forecast_resp.status_code == 200 else {"list": []}
 
     weather_main = current["weather"][0]["main"]
-    rain_probability = round(current.get("pop", 0) * 100) if "pop" in current else (
-        60 if weather_main in ("Rain", "Thunderstorm", "Drizzle") else 15
-    )
+    today = (when or datetime.now(timezone.utc).date()).isoformat()
+    today_forecasts = [e for e in forecast_data.get("list", []) if e["dt_txt"].startswith(today)]
+    rain_probability = round(max(e.get("pop", 0) for e in today_forecasts) * 100) if today_forecasts else None
 
     # Regroupe les prévisions 3h par jour civil pour en tirer un résumé quotidien.
     daily_buckets = {}
@@ -100,7 +102,7 @@ def get_weather(city_name: str, when=None) -> dict:
         daily_buckets.setdefault(day_key, []).append(entry)
 
     forecast_3days = {}
-    for i, (day_key, entries) in enumerate(list(daily_buckets.items())[1:4], start=1):
+    for i, (day_key, entries) in enumerate([(day, entries) for day, entries in daily_buckets.items() if day > today][:3], start=1):
         temps = [e["main"]["temp"] for e in entries]
         pops = [e.get("pop", 0) for e in entries]
         main_conditions = [e["weather"][0]["main"] for e in entries]
@@ -126,4 +128,19 @@ def get_weather(city_name: str, when=None) -> dict:
         "advice_agricole": _advice_for(temp, humidity, rain_probability),
         "forecast_3days": forecast_3days,
         "source": "OpenWeatherMap",
+        "observed_at": datetime.fromtimestamp(current["dt"], tz=timezone.utc).isoformat(),
     }
+
+def get_weather(city_name: str, when=None) -> dict:
+    if city_name not in IVORIAN_CITIES:
+        raise WeatherAPIError("Ville inconnue.")
+    cache_key = f"weather:{city_name}:{when or datetime.now(timezone.utc).date()}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+    try:
+        data = _get_weather(city_name, when)
+    except (requests.RequestException, ValueError, KeyError, TypeError, IndexError):
+        raise WeatherAPIError("Le service meteo est momentanement indisponible. Reessaie dans quelques instants.") from None
+    cache.set(cache_key, data, 600)
+    return data

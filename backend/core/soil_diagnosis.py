@@ -1,9 +1,4 @@
-"""
-Analyse visuelle du sol pour déterminer le type de texture (Hub Engrais).
-
-Utilise Gemini 2.5 Flash si GEMINI_API_KEY est configurée, sinon un moteur
-simulé basé sur des indices visuels courants en Côte d'Ivoire.
-"""
+"""Analyse visuelle du sol via Gemini. Une cle valide est requise ; aucun resultat simule n est produit."""
 
 import hashlib
 import json
@@ -11,6 +6,7 @@ import logging
 import random
 
 from django.conf import settings
+from .ai_service import AIUnavailableError, create_gemini_client, image_mime_type
 
 logger = logging.getLogger(__name__)
 
@@ -102,12 +98,12 @@ def _analyze_with_gemini(image_bytes: bytes) -> dict:
     from google import genai
     from google.genai import types
 
-    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    client = create_gemini_client()
 
     response = client.models.generate_content(
-        model=MODEL_NAME,
+        model=settings.GEMINI_MODEL,
         contents=[
-            types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
+            types.Part.from_bytes(data=image_bytes, mime_type=image_mime_type(image_bytes)),
             PROMPT,
         ],
         config=types.GenerateContentConfig(
@@ -142,8 +138,4 @@ def analyze_soil_image(image_bytes: bytes) -> dict:
     if settings.GEMINI_API_KEY:
         return _analyze_with_gemini(image_bytes)
 
-    logger.warning(
-        "GEMINI_API_KEY non configurée : analyse de sol simulée. "
-        "Ajoutez votre clé dans .env pour activer l'analyse IA réelle."
-    )
-    return _analyze_simulated(image_bytes)
+    raise AIUnavailableError("L'analyse de sol IA n'est pas encore configurée. Aucun résultat n'a été généré.")

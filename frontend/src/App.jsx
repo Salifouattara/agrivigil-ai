@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -9,17 +10,17 @@ import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 import AppLayout from '@/components/layout/AppLayout';
-import ScanIA from '@/pages/ScanIA';
-import Calculateur from '@/pages/Calculateur';
-import CarnetSante from '@/pages/CarnetSante';
-import Meteo from '@/pages/Meteo';
-import HubExperts from '@/pages/HubExperts';
-import Conseils from '@/pages/Conseils';
-import Communaute from '@/pages/Communaute';
+const ScanIA = lazy(() => import('@/pages/ScanIA'));
+const Calculateur = lazy(() => import('@/pages/Calculateur'));
+const CarnetSante = lazy(() => import('@/pages/CarnetSante'));
+const Meteo = lazy(() => import('@/pages/Meteo'));
+const HubExperts = lazy(() => import('@/pages/HubExperts'));
+const Conseils = lazy(() => import('@/pages/Conseils'));
+const Communaute = lazy(() => import('@/pages/Communaute'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -45,6 +46,7 @@ const AuthenticatedApp = () => {
   }
 
   return (
+    <Suspense fallback={<div role="status" className="p-10 text-center text-sm text-[#64766a]">Chargement de votre espace…</div>}>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -63,6 +65,7 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </Suspense>
   );
 };
 

@@ -8,6 +8,7 @@ import json
 import logging
 
 from django.conf import settings
+from .ai_service import create_gemini_client
 
 logger = logging.getLogger(__name__)
 
@@ -228,7 +229,7 @@ def _enrich_with_gemini(crop_type: str, base_advice: dict) -> dict:
     from google import genai
     from google.genai import types
 
-    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    client = create_gemini_client()
 
     prompt = (
         f"Tu es un agronome conseiller pour les agriculteurs ivoiriens. "
@@ -251,7 +252,7 @@ def _enrich_with_gemini(crop_type: str, base_advice: dict) -> dict:
     }
 
     response = client.models.generate_content(
-        model=MODEL_NAME,
+        model=settings.GEMINI_MODEL,
         contents=[prompt],
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
